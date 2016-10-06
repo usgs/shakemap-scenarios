@@ -6,4 +6,4 @@ build
 .cache
 .coverage
 .coverage.xml
-shakemap.egg-info/
+scenarios.egg-info/
