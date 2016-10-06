@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+
+import os
+import time
+import json
+import argparse
+from lxml import etree
+
+from scenarios.input_output import parse_bssc2014_ucerf
+from scenarios.utils import rake_to_type
+
+
+def main(args):
+    if args.shakehome:
+        shakehome = args.shakehome
+    else:
+        shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
+
+    # Open rupture file
+    rfile = args.file
+    with open(rfile) as f:
+        rupts = json.load(f)
+        nrup = len(rupts['events'])
+        print('Total number of ruptures: %d' % nrup)
+
+    if rupts['name'] == '2014 NSHMP Determinisitc Event Set':
+        rlist = parse_bssc2014_ucerf(rupts, args)
+    elif (rupts['name'] == '2014 NSHMP Determinisitc Event Set WUS outside CA') or\
+         (rupts['name'] == '2014 NSHMP Determinisitc Event Set CEUS'):
+        rlist = parse_json(rupts, args)
+    elif rupts['name'] == '2014 NSHMP Determinisitc Event Set Cascadia':
+        pass
+    else:
+        raise Exception('Unknown rupture file type.')
+
+
+    nrup = len(rlist)
+
+    for i in range(nrup):
+
+        rdict = rlist[i]
+        flt = rdict['fault']
+        event = rdict['event']
+        edges = rdict['edges']
+        id_str = rdict['id_str']
+        eventsourcecode = rdict['eventsourcecode']
+        short_name = rdict['short_name']
+        real_desc = rdict['real_desc']
+
+        #-----------------------------------------------------------------------
+        # Write files
+        #-----------------------------------------------------------------------
+
+        # Create base directory if it doesn't exist
+        datdir = os.path.join(shakehome, 'data')
+        if os.path.isdir(datdir) == False:
+            os.mkdir(datdir)
+
+        # Create event directory if it doesn't exist
+        evt_dir = os.path.join(datdir, id_str)
+        if os.path.isdir(evt_dir) == False:
+            os.mkdir(evt_dir)
+        print(evt_dir)
+
+        # Create input directory if it doesn't exist
+        input_dir = os.path.join(evt_dir, 'input')
+        if os.path.isdir(input_dir) == False:
+            os.mkdir(input_dir)
+
+        #-----------------------------------------------------------------------
+        # Write fault files -- use top edge/bottom edges for maps because
+        # UCERF3 subsections are so small and basically black out the full
+        # surface projection of the fault.
+        #-----------------------------------------------------------------------
+        flt.writeFaultFile(os.path.join(
+            input_dir, input_dir, id_str + '-fault-for-calc.txt'))
+
+        ff = open(os.path.join(input_dir, id_str + '_for-map_fault.txt'), 'wt')
+
+        top = edges[0]
+        bot = edges[1]
+        top_lat = [p.latitude for p in top]
+        top_lon = [p.longitude for p in top]
+        top_dep = [p.depth for p in top]
+        bot_lat = [p.latitude for p in bot]
+        bot_lon = [p.longitude for p in bot]
+        bot_dep = [p.depth for p in bot]
+
+        nl = len(top_lon)
+        for i in range(0, nl):  # top edge
+            ff.write('%.4f %.4f %.4f\n' % (top_lat[i], top_lon[i], top_dep[i]))
+        for i in list(reversed(range(0, nl))):  # bottom edge
+            ff.write('%.4f %.4f %.4f\n' % (bot_lat[i], bot_lon[i], bot_dep[i]))
+        # Close the polygon loop
+        ff.write('%.4f %.4f %.4f\n' % (top_lat[0], top_lon[0], top_dep[0]))
+
+        ff.close()
+
+        # Need to parse 'time' for event.xml
+        evtime = time.strptime(str(event['time']), "%Y-%m-%d %H:%M:%S")
+
+        # Write event.xml file
+        xml_file = os.path.join(input_dir, 'event.xml')
+        root = etree.Element('earthquake')
+        root.set('id', id_str)
+        root.set('lat', str(event['lat']))
+        root.set('lon', str(event['lon']))
+        root.set('mag', str(event['mag']))
+        root.set('year', time.strftime('%Y', evtime))
+        root.set('month', time.strftime('%m', evtime))
+        root.set('day', time.strftime('%d', evtime))
+        root.set('hour', time.strftime('%H', evtime))
+        root.set('minute', time.strftime('%M', evtime))
+        root.set('second', time.strftime('%S', evtime))
+        root.set('timezone', 'UTC')
+        root.set('depth', str(event['depth']))
+        root.set('locstring', short_name)
+        root.set('description', real_desc)
+        root.set('created', '')
+        root.set('otime', '')
+        root.set('type', rake_to_type(event['rake']))
+        root.set('network', '')
+        root.set('reference', flt.getReference())
+        root.set('rake', str(event['rake']))
+        root.set('directivity', str(args.directivity))
+        root.set('eventsourcecode', eventsourcecode)
+
+        et = etree.ElementTree(root)
+        et.write(xml_file, pretty_print=True, xml_declaration=True,
+                 encoding="us-ascii")
+
+
+if __name__ == '__main__':
+    desc = '''
+    Create ShakeMap input directory. This is designed primarily to be used with
+    an input file that provides rupture information. Currently, this only 
+    supports the BSSC2014 JSON format. 
+    
+    TODO: 
+      * Add support for NSHM XML format
+      * Add support for Excel rupture template
+      * prompt for minimal info if file is not provided
+    '''
+    parser = argparse.ArgumentParser(description=desc)
+    fh = 'File with rupture information; currently only BSSC2014 JSON format; '\
+         'Future: USGS NSHM xml format and Excel rupture template.'
+    parser.add_argument('-f', '--file', help=fh)
+    parser.add_argument('-r', '--reference', help='Reference for rupture source.',
+                        default='')
+    parser.add_argument('-d', '--dirind',
+                        help='Directivity; -1 for no directivity (default); 0 '\
+                        'and 2 are the two opposing unilateral directions, 1 '\
+                        'is for bilateral.',
+                        default=-1, type=int, choices=[-1, 0, 1, 2])
+    parser.add_argument('-i', '--index',
+                        help='List of rupture indices to run. Useful if you do '\
+                        'not want to run all ruptures in the file.',
+                        nargs='*')
+    shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
+    parser.add_argument(
+        '-s', '--shakehome',
+        help='the location of ShakeMap install; default is %s.' % shakehome)
+    args = parser.parse_args()
+    if args.dirind == -1:
+        args.directivity = False
+    else:
+        args.directivity = True
+    main(args)
