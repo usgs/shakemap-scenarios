@@ -60,6 +60,8 @@ from shakemap.grind.multigmpe import MultiGMPE
 from shakemap.grind.directivity.rowshandel2013 import Rowshandel2013
 from shakemap.utils.timeutils import ShakeDateTime
 from shakemap.grind.gmice.wgrw12 import WGRW12
+from shakemap.grind.virtualipe import VirtualIPE
+
 from impactutils.io.cmd import get_command_output
 
 from scenarios.utils import filter_gmpe_list
@@ -483,33 +485,14 @@ def main(args):
             fd1grd.save(os.path.join(input_dir, 'fd1.grd'))
             fd3grd.save(os.path.join(input_dir, 'fd3.grd'))
 
-        # MMI - get from PGV
+        # MMI - get from PGV with VirtualIPE
+        sgmpe, swts =filter_gmpe_list(gmpes, wts, imt.PGV())
+        mgmpe = MultiGMPE.from_list(sgmpe, swts,
+                                    default_gmpes_for_site = site_gmpes)
         gmice = WGRW12()
-        pgv = imdict['pgv']['mean']
+        vipe = VirtualIPE.fromFuncs(mgmpe, gmice)
+        mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rupt, dx, imt.MMI(), stddev_types)
 
-        # Use rrup if available, otherwise rhypo
-        if hasattr(dx, 'rrup'):
-            dist4gmice = dx.rrup
-        else:
-            dist4gmice = dx.rhypo
-
-        mmi = gmice.getMIfromGM(pgv, 'PGV',
-                                dists=dist4gmice,
-                                mag=rupt.mag)
-        GM2MIsd = gmice.getGM2MIsd()['pgv']  # in 'intensity' units
-        c = WGRW12._WGRW12__constants['pgv']
-        c2 = WGRW12._WGRW12__constants2['pgv']
-        lamps = np.log10(np.exp(mmi))
-        dmmi_damp = np.zeros_like(lamps)
-        idx = (lamps >= c2['T1']) & (lamps < c['T1'])
-        dmmi_damp[idx] = c['C2']
-        idx = lamps >= c['T1']
-        dmmi_damp[idx] = c['C4']
-
-        # convert to log10
-        amp_sd = imdict['pgv']['sigma'] / np.log(10)
-        additional_var = dmmi_damp**2 * (amp_sd**2)
-        mmi_sd = np.sqrt(GM2MIsd**2 + additional_var)
         mgrid = GMTGrid(mmi, smdict)
         sgrid = GMTGrid(mmi_sd, smdict)
         mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
