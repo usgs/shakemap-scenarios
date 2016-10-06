@@ -8,10 +8,6 @@ import io
 import numpy as np
 import pytest
 
-homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
-shakedir = os.path.abspath(os.path.join(homedir, '..', '..'))
-sys.path.insert(0, shakedir)
-
 from shakemap.grind.fault import Fault
 from shakemap.utils.exception import ShakeMapException
 from impactutils.io.cmd import get_command_output
@@ -24,9 +20,8 @@ def test_pisgah_bullion_mtn(tmpdir):
 
     # make a temporary directory
     p = tmpdir.mkdir("sub")
-    jsonfile = os.path.join(shakedir, 'tests/data/eventdata/UCERF3_EventSet_All.json')
-    script = os.path.join(shakedir,'mkinputdir')
-    cmd = '%s -f %s -i 46 -s %s' % (script,jsonfile, p)
+    jsonfile = 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json'
+    cmd = '%s -f %s -i 46 -s %s' % ('mkinputdir', jsonfile, p)
     rc,so,se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
