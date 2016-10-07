@@ -2,19 +2,158 @@ import os
 import time
 import json
 import argparse
+import xml.etree.ElementTree as ET
+import ast
 
 import numpy as np
 from lxml import etree
 
 import openquake.hazardlib.geo as geo
 
-import shakemap.grind.fault as fault
+from shakemap.grind.fault import Fault
 from shakemap.utils.ecef import latlon2ecef, ecef2latlon
 from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
 
 from scenarios.utils import get_event_id
 from scenarios.utils import get_fault_edges
+from scenarios.utils import rake_to_type
+
+
+def read_event_xml(file):
+    """
+    Read event.xml. 
+
+    Args:
+        file (str): Path to event.xml file.
+
+    Returns:
+        dict: Dictionary with event info.
+
+    """
+    eventtree = ET.parse(file)
+    eventroot = eventtree.getroot()
+    for eq in eventroot.iter('earthquake'):
+        id_str = eq.attrib['id']
+        magnitude = float(eq.attrib['mag'])
+        hlat = float(eq.attrib['lat'])
+        hlon = float(eq.attrib['lon'])
+        hdepth = float(eq.attrib['depth'])
+        rake = float(eq.attrib['rake'])
+        lstring = eq.attrib['locstring']
+        description = eq.attrib['description']
+        mech = eq.attrib['type']
+        year = int(eq.attrib['year'])
+        month = int(eq.attrib['month'])
+        day = int(eq.attrib['day'])
+        hour = int(eq.attrib['hour'])
+        minute = int(eq.attrib['minute'])
+        second = int(eq.attrib['second'])
+        directivity = ast.literal_eval(eq.attrib['directivity'])
+
+    sdt = ShakeDateTime(year, month, day, hour, minute, second, int(0))
+
+    event = {'lat': hlat,
+             'lon': hlon,
+             'depth': hdepth,
+             'mag': magnitude,
+             'rake': rake,
+             'id': id_str,
+             'locstring': lstring,
+             'type': mech,
+             'time': sdt.strftime('%Y-%m-%dT%H:%M:%SZ'),
+             'timezone': 'UTC',
+             'directivity':directivity,
+             'description':description,
+             'sdt':sdt}
+
+    return event
+
+
+
+def write_event_xml(input_dir, rdict, directivity):
+    """
+    Write the event.xml file. 
+
+    Args:
+        input_dir (str): Path of input directory.
+        rdict (dict): Rupture dictionary.
+        directivity (bool): Include directivity?
+
+    """
+    event = rdict['event']
+
+    # Need to parse 'time' for event.xml
+    evtime = time.strptime(str(event['time']), "%Y-%m-%d %H:%M:%S")
+
+    # Write event.xml file
+    xml_file = os.path.join(input_dir, 'event.xml')
+    root = etree.Element('earthquake')
+    root.set('id', rdict['id_str'])
+    root.set('lat', str(event['lat']))
+    root.set('lon', str(event['lon']))
+    root.set('mag', str(event['mag']))
+    root.set('year', time.strftime('%Y', evtime))
+    root.set('month', time.strftime('%m', evtime))
+    root.set('day', time.strftime('%d', evtime))
+    root.set('hour', time.strftime('%H', evtime))
+    root.set('minute', time.strftime('%M', evtime))
+    root.set('second', time.strftime('%S', evtime))
+    root.set('timezone', 'UTC')
+    root.set('depth', str(event['depth']))
+    root.set('locstring', rdict['short_name'])
+    root.set('description', rdict['real_desc'])
+    root.set('created', '')
+    root.set('otime', '')
+    root.set('type', rake_to_type(event['rake']))
+    root.set('network', '')
+    root.set('reference', rdict['fault'].getReference())
+    root.set('rake', str(event['rake']))
+    root.set('directivity', str(directivity))
+    root.set('eventsourcecode', rdict['eventsourcecode'])
+
+    et = etree.ElementTree(root)
+    et.write(xml_file, pretty_print=True, xml_declaration=True,
+             encoding="us-ascii")
+
+
+def write_fault_files(input_dir, rdict):
+    """
+    Write fault files for scenarios. This includes one for distance
+    calculations, which is the full representation of the fault, and
+    also a simplified version for plotting on a map that is just the
+    trace of the top and bottom edges. 
+
+    Args:
+        input_dir (str): Path of event input directory. 
+        rdict (dict): Rupture dictionary.
+
+    """
+    fault = rdict['fault']
+    fault.writeFaultFile(os.path.join(
+        input_dir, rdict['id_str'] + '-fault-for-calc.txt'))
+
+    ff = open(os.path.join(
+        input_dir, rdict['id_str'] + '_for-map_fault.txt'), 'wt')
+
+    top = rdict['edges'][0]
+    bot = rdict['edges'][1]
+    top_lat = [p.latitude for p in top]
+    top_lon = [p.longitude for p in top]
+    top_dep = [p.depth for p in top]
+    bot_lat = [p.latitude for p in bot]
+    bot_lon = [p.longitude for p in bot]
+    bot_dep = [p.depth for p in bot]
+
+    nl = len(top_lon)
+    for i in range(0, nl):  # top edge
+        ff.write('%.4f %.4f %.4f\n' % (top_lat[i], top_lon[i], top_dep[i]))
+    for i in list(reversed(range(0, nl))):  # bottom edge
+        ff.write('%.4f %.4f %.4f\n' % (bot_lat[i], bot_lon[i], bot_dep[i]))
+    # Close the polygon loop
+    ff.write('%.4f %.4f %.4f\n' % (top_lat[0], top_lon[0], top_dep[0]))
+
+    ff.close()
 
 
 def parse_bssc2014_ucerf(rupts, args):
@@ -22,12 +161,15 @@ def parse_bssc2014_ucerf(rupts, args):
     This function is to parse the UCERF3 json file format. The ruptures in 
     UCERF3 are very complex and so we don't exepct to get other rupture lists
     in this format. 
-    :param rupts:
-        Python translation of json using json.load. 
-    :param args:
-        argparse object. 
-    :returns:
-        Dictionary of rupture information.
+
+    Args:
+        rupts (dict): Python translation of rupture json file using json.load 
+            method. 
+        args (ArgumentParser): argparse object. 
+
+    Returns:
+        dict: Dictionary of rupture information.
+
     """
     rlist = []
     nrup = len(rupts['events'])
@@ -95,9 +237,9 @@ def parse_bssc2014_ucerf(rupts, args):
             new_seg_ind.extend([secind] * n_sec_trace)
             secind = secind + 1
 
-        flt = fault.Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
-                                    width_sec, dip_sec, strike=strike_sec,
-                                    reference=args.reference)
+        flt = Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
+                               width_sec, dip_sec, strike=strike_sec,
+                               reference=args.reference)
         flt._segment_index = new_seg_ind
 
         quads = flt.getQuadrilaterals()
@@ -170,12 +312,14 @@ def parse_json(rupts, args):
     Users first and last point to get average strike, which is used
     for all quads. 
 
-    :param rupts:
-        Python translation of json using json.load. 
-    :param args:
-        argparse object. 
-    :returns:
-        Dictionary of rupture information.
+    Args:
+        rupts (dict): Python translation of rupture json file using json.load 
+            method.
+        args (ArgumentParser): argparse object. 
+
+    Returns:
+        dict: Dictionary of rupture information.
+
     """
     rlist = []
     nrup = len(rupts['events'])
@@ -188,7 +332,7 @@ def parse_json(rupts, args):
 
     for i in iter:
         event_name = rupts['events'][i]['desc']
-        short_name = event_name
+        short_name = event_name.split('.xls')[0]
         id = rupts['events'][i]['id']
         magnitude = rupts['events'][i]['mag']
         dip = rupts['events'][i]['dip']
@@ -210,9 +354,9 @@ def parse_json(rupts, args):
         P2 = geo.point.Point(lons[-1], lats[-1])
         strike = np.array([P1.azimuth(P2)])
 
-        flt = fault.Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
-                                    widths, dips, strike=strike,
-                                    reference=args.reference)
+        flt = Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
+                              widths, dips, strike=strike,
+                              reference=args.reference)
         flt._segment_index = np.zeros_like(xp0)
 
         quads = flt.getQuadrilaterals()

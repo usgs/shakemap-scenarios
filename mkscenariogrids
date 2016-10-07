@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 import os
-import xml.etree.ElementTree as ET
 import argparse
-import ast
 import warnings
 
 import numpy as np
@@ -45,7 +43,6 @@ from openquake.hazardlib.gsim.abrahamson_2015 import AbrahamsonEtAl2015SSlab
 
 #-------------------------------------------------------------------------------
 # Openquake utilities
-from openquake.hazardlib.geo.utils import get_orthographic_projection
 from openquake.hazardlib import imt, const
 
 from mapio.geodict import GeoDict
@@ -65,54 +62,9 @@ from shakemap.grind.virtualipe import VirtualIPE
 from impactutils.io.cmd import get_command_output
 
 from scenarios.utils import filter_gmpe_list
-
-#-------------------------------------------------------------------------------
-# Function to compute extent from source
-#-------------------------------------------------------------------------------
-def get_extent(source):
-    # Note: currently written assuming source has a fault
-    flt = source.getFault()
-    lats = flt.getLats()
-    lons = flt.getLons()
-    clat = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
-    clon = 0.5 * (np.nanmax(lons) + np.nanmin(lons))
-    mag = source.getEventParam('mag')
-    if mag < 6.48:
-        mindist_km = 100.
-    else:
-        #-----------------------------------------------------------------------
-        # Note: This is an approximate equation developed for ACR/WUS.
-        #       Need to redo for SCR/CEUS.
-        #       Would be useful to have tectonic environment stored in
-        #       source object.
-        #-----------------------------------------------------------------------
-        mindist_km = 27.24 * mag**2 - 250.4 * mag + 579.1
-    # Projection
-    proj = get_orthographic_projection(clon - 4, clon + 4, clat + 4, clat - 4)
-    fltx, flty = proj(lons, lats)
-    xmin = np.nanmin(fltx) - mindist_km
-    ymin = np.nanmin(flty) - mindist_km
-    xmax = np.nanmax(fltx) + mindist_km
-    ymax = np.nanmax(flty) + mindist_km
-    dx = xmax - xmin
-    dy = ymax - ymin
-    ar = dy / dx
-    if ar > 1.25:
-        # Inflate x
-        dx_target = dy / 1.25
-        ddx = dx_target - dx
-        xmax = xmax + ddx / 2
-        xmin = xmin - ddx / 2
-    if ar < 0.6:
-        # inflate y
-        dy_target = dx * 0.6
-        ddy = dy_target - dy
-        ymax = ymax + ddy / 2
-        ymin = ymin - ddy / 2
-    lonmin, latmin = proj(np.array([xmin]), np.array([ymin]), reverse=True)
-    lonmax, latmax = proj(np.array([xmax]), np.array([ymax]), reverse=True)
-
-    return lonmin, lonmax, latmin, latmax
+from scenarios.utils import is_stable
+from scenarios.utils import get_extent
+from scenarios.input_output import read_event_xml
 
 
 def main(args):
@@ -129,26 +81,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Read in event.xml
     #---------------------------------------------------------------------------
-    eventtree = ET.parse(xml_file)
-    eventroot = eventtree.getroot()
-    for eq in eventroot.iter('earthquake'):
-        magnitude = float(eq.attrib['mag'])
-        hlat = float(eq.attrib['lat'])
-        hlon = float(eq.attrib['lon'])
-        hdepth = float(eq.attrib['depth'])
-        rake = float(eq.attrib['rake'])
-        lstring = eq.attrib['locstring']
-        description = eq.attrib['description']
-        mech = eq.attrib['type']
-        year = int(eq.attrib['year'])
-        month = int(eq.attrib['month'])
-        day = int(eq.attrib['day'])
-        hour = int(eq.attrib['hour'])
-        minute = int(eq.attrib['minute'])
-        second = int(eq.attrib['second'])
-        Directivity = ast.literal_eval(eq.attrib['directivity'])
-
-    sdt = ShakeDateTime(year, month, day, hour, minute, second, int(0))
+    event = read_event_xml(xml_file)
 
     #---------------------------------------------------------------------------
     # Read in rupture and make event dictionary
@@ -160,16 +93,6 @@ def main(args):
 
     ruptfile = so.decode('utf-8').strip()
     flt = fault.Fault.readFaultFile(ruptfile)
-    event = {'lat': hlat,
-             'lon': hlon,
-             'depth': hdepth,
-             'mag': magnitude,
-             'rake': rake,
-             'id': id_str,
-             'locstring': lstring,
-             'type': mech,
-             'time': sdt.strftime('%Y-%m-%dT%H:%M:%SZ'),
-             'timezone': 'UTC'}
 
     #---------------------------------------------------------------------------
     # Get list of GMPEs
@@ -179,14 +102,6 @@ def main(args):
         gmpes = [AbrahamsonEtAl2014(), BooreEtAl2014(),
                  CampbellBozorgnia2014(), ChiouYoungs2014()]
         wts = [0.25, 0.25, 0.25, 0.25]
-        #-----------------------------------------------------------------------
-        # Note: we are not using Idriss' eqns for a few reasons:
-        #      1) Does not include coefficients to compute PGV so we would need
-        #         to use a conversion equation from another IM.
-        #      2) His equations are not valid for Vs30 < 450 m/s.
-        #      3) He does not seprate inter- and intra-event errors.
-        #      4) The NHSMP will no longer be using it in the future.
-        #-----------------------------------------------------------------------
     elif args.gmpe == 'NSHMP14scr_rlme':
         gmpes = [FrankelEtAl1996MwNSHMP2008(),
                  ToroEtAl1997MwNSHMP2008(),
@@ -335,8 +250,8 @@ def main(args):
     south = lat_mid - latspan / 2.0 - buf
 
     # Shakemap uses epicenter as ceter, solve for offsets to match
-    latoff = hlat - lat_mid  # move map south
-    lonoff = lon_mid - hlon  # move map east
+    latoff = event['lat'] - lat_mid  # move map south
+    lonoff = lon_mid - event['lon']  # move map east
 
     # Geodictionary for this ShakeMap
     tmpdict = {'xmin': west, 'xmax': east,
@@ -386,11 +301,9 @@ def main(args):
     imt_dict = {'pga': 'PGA', 'pgv': 'PGV', 'psa03': 'SA(0.3)',
                 'psa10': 'SA(1.0)', 'psa30': 'SA(3.0)'}
 
-    #----------------------------------------------------
     #---------------------------------------------------------------------------
     # Mesh calculations
     #---------------------------------------------------------------------------
-    #----------------------------------------------------
     lats = np.linspace(north, south, smny)
     lons = np.linspace(west, east, smnx)
     lon, lat = np.meshgrid(lons, lats)
@@ -417,7 +330,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Directivity
     #---------------------------------------------------------------------------
-    if Directivity:
+    if event['directivity'] is True:
         R13 = Rowshandel2013.fromSites(
             source, sites, dx=1.0, T=[1.0, 3.0],
             a_weight=0.5, mtype=1)
@@ -432,7 +345,7 @@ def main(args):
 
         # Remove those GMPEs that are not applicable to this IMT and redistribute
         # the weights. 
-        sgmpe, swts =filter_gmpe_list(gmpes, wts, iimt)
+        sgmpe, swts = filter_gmpe_list(gmpes, wts, iimt)
 
         mgmpe = MultiGMPE.from_list(sgmpe, swts,
                                     default_gmpes_for_site = site_gmpes)
@@ -446,7 +359,7 @@ def main(args):
         #       eventually available, need to move the sigma
         #       adjustment into this if-statement.
         #-----------------------------------------------------------------------
-        if Directivity:
+        if event['directivity'] is True:
             if (key == 'pgv') | (key == 'psa10'):
                 fd = fd1
             elif (key == 'psa30'):
@@ -479,7 +392,7 @@ def main(args):
             sgrid.save(os.path.join(input_dir, key + '_sd.grd'))
 
         # Directivity factors
-        if Directivity:
+        if event['directivity'] is True:
             fd1grd = GMTGrid(fd1, smdict)
             fd3grd = GMTGrid(fd3, smdict)
             fd1grd.save(os.path.join(input_dir, 'fd1.grd'))

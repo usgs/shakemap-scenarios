@@ -7,13 +7,114 @@ import argparse
 import numpy as np
 from lxml import etree
 
+from shapely.geometry import Polygon
+from shapely.geometry import Point
+
 import openquake.hazardlib.geo as geo
 from openquake.hazardlib.imt import PGA, PGV, SA
+from openquake.hazardlib.geo.utils import get_orthographic_projection
 
 import shakemap.grind.fault as fault
 from shakemap.utils.ecef import latlon2ecef, ecef2latlon
 from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
+
+
+def get_extent(source):
+    """
+    Method to compute map extent from source.
+
+    Note: currently written assuming source has a fault
+
+    Args:
+        source (Source): A Source instance. 
+
+    Returns:
+        tuple: lonmin, lonmax, latmin, latmax.
+
+    """
+    # 
+    flt = source.getFault()
+    lats = flt.getLats()
+    lons = flt.getLons()
+    clat = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
+    clon = 0.5 * (np.nanmax(lons) + np.nanmin(lons))
+    mag = source.getEventParam('mag')
+
+    # Is this a stable or active tectonic event?
+    # (this could be made an attribute of the ShakeMap Source class)
+    hypo = source.getHypo()
+    stable = is_stable(hypo.longitude, hypo.latitude)
+
+    if stable is False:
+        if mag < 6.48:
+            mindist_km = 100.
+        else:
+            mindist_km = 27.24 * mag**2 - 250.4 * mag + 579.1
+    else:
+        if mag < 6.10:
+            mindist_km = 100.
+        else:
+            mindist_km = 63.4 * mag**2 - 465.4 * mag + 581.3
+
+    # Apply an upper limit on extent. This should only matter for large magnitudes
+    # (> ~8.25) in stable tectonic environments. 
+    if mindist_km > 1000.:
+        mindist_km = 1000.
+
+    # Projection
+    proj = get_orthographic_projection(clon - 4, clon + 4, clat + 4, clat - 4)
+    fltx, flty = proj(lons, lats)
+    xmin = np.nanmin(fltx) - mindist_km
+    ymin = np.nanmin(flty) - mindist_km
+    xmax = np.nanmax(fltx) + mindist_km
+    ymax = np.nanmax(flty) + mindist_km
+
+    # Put a limit on range of aspect ratio
+    dx = xmax - xmin
+    dy = ymax - ymin
+    ar = dy / dx
+    if ar > 1.25:
+        # Inflate x
+        dx_target = dy / 1.25
+        ddx = dx_target - dx
+        xmax = xmax + ddx / 2
+        xmin = xmin - ddx / 2
+    if ar < 0.6:
+        # inflate y
+        dy_target = dx * 0.6
+        ddy = dy_target - dy
+        ymax = ymax + ddy / 2
+        ymin = ymin - ddy / 2
+
+    lonmin, latmin = proj(np.array([xmin]), np.array([ymin]), reverse=True)
+    lonmax, latmax = proj(np.array([xmax]), np.array([ymax]), reverse=True)
+
+    return lonmin, lonmax, latmin, latmax
+
+
+def is_stable(lon, lat):
+    """
+    Determine if point is located in the US stable tectonic region. Uses the
+    same boundary as the US NSHMP and so this function needs to be modified to
+    work outside of the US.
+
+    Args:
+        lon (float): Lognitude. 
+        lat (float): Latitude. 
+
+    Returns:
+        bool: Is the point classified as tectonically stable. 
+
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    pfile = os.path.join(here, 'data', 'nshmp_stable.json')
+    with open(pfile) as f:
+        coords = json.load(f)
+    tmp = [(float(x),float(y)) for x, y in zip(coords['lon'], coords['lat'])]
+    poly = Polygon(tmp)
+    p = Point((lon, lat))
+    return p.within(poly)
 
 
 def filter_gmpe_list(gmpes, wts, imt):
