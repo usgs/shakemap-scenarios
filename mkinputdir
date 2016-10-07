@@ -7,7 +7,9 @@ import argparse
 from lxml import etree
 
 from scenarios.input_output import parse_bssc2014_ucerf
-from scenarios.utils import rake_to_type
+from scenarios.input_output import parse_json
+from scenarios.input_output import write_fault_files
+from scenarios.input_output import write_event_xml
 
 
 def main(args):
@@ -39,13 +41,7 @@ def main(args):
     for i in range(nrup):
 
         rdict = rlist[i]
-        flt = rdict['fault']
-        event = rdict['event']
-        edges = rdict['edges']
         id_str = rdict['id_str']
-        eventsourcecode = rdict['eventsourcecode']
-        short_name = rdict['short_name']
-        real_desc = rdict['real_desc']
 
         #-----------------------------------------------------------------------
         # Write files
@@ -68,66 +64,12 @@ def main(args):
             os.mkdir(input_dir)
 
         #-----------------------------------------------------------------------
-        # Write fault files -- use top edge/bottom edges for maps because
-        # UCERF3 subsections are so small and basically black out the full
-        # surface projection of the fault.
+        # Write fault files and event.xml
         #-----------------------------------------------------------------------
-        flt.writeFaultFile(os.path.join(
-            input_dir, input_dir, id_str + '-fault-for-calc.txt'))
+        write_fault_files(input_dir, rdict)
+        
+        write_event_xml(input_dir, rdict, args.directivity)
 
-        ff = open(os.path.join(input_dir, id_str + '_for-map_fault.txt'), 'wt')
-
-        top = edges[0]
-        bot = edges[1]
-        top_lat = [p.latitude for p in top]
-        top_lon = [p.longitude for p in top]
-        top_dep = [p.depth for p in top]
-        bot_lat = [p.latitude for p in bot]
-        bot_lon = [p.longitude for p in bot]
-        bot_dep = [p.depth for p in bot]
-
-        nl = len(top_lon)
-        for i in range(0, nl):  # top edge
-            ff.write('%.4f %.4f %.4f\n' % (top_lat[i], top_lon[i], top_dep[i]))
-        for i in list(reversed(range(0, nl))):  # bottom edge
-            ff.write('%.4f %.4f %.4f\n' % (bot_lat[i], bot_lon[i], bot_dep[i]))
-        # Close the polygon loop
-        ff.write('%.4f %.4f %.4f\n' % (top_lat[0], top_lon[0], top_dep[0]))
-
-        ff.close()
-
-        # Need to parse 'time' for event.xml
-        evtime = time.strptime(str(event['time']), "%Y-%m-%d %H:%M:%S")
-
-        # Write event.xml file
-        xml_file = os.path.join(input_dir, 'event.xml')
-        root = etree.Element('earthquake')
-        root.set('id', id_str)
-        root.set('lat', str(event['lat']))
-        root.set('lon', str(event['lon']))
-        root.set('mag', str(event['mag']))
-        root.set('year', time.strftime('%Y', evtime))
-        root.set('month', time.strftime('%m', evtime))
-        root.set('day', time.strftime('%d', evtime))
-        root.set('hour', time.strftime('%H', evtime))
-        root.set('minute', time.strftime('%M', evtime))
-        root.set('second', time.strftime('%S', evtime))
-        root.set('timezone', 'UTC')
-        root.set('depth', str(event['depth']))
-        root.set('locstring', short_name)
-        root.set('description', real_desc)
-        root.set('created', '')
-        root.set('otime', '')
-        root.set('type', rake_to_type(event['rake']))
-        root.set('network', '')
-        root.set('reference', flt.getReference())
-        root.set('rake', str(event['rake']))
-        root.set('directivity', str(args.directivity))
-        root.set('eventsourcecode', eventsourcecode)
-
-        et = etree.ElementTree(root)
-        et.write(xml_file, pretty_print=True, xml_declaration=True,
-                 encoding="us-ascii")
 
 
 if __name__ == '__main__':

@@ -11,6 +11,7 @@ setup(name='scenarios',
       url='http://github.com/usgs/shakemap',
       packages=['scenarios'],
       package_data={'scenarios': [os.path.join('rupture_sets', '*'),
+                                  os.path.join('scenarios', 'data', '*'),
                                   os.path.join('tests', 'data', '*') ]},
       scripts=['runscenarios', 'mkinputdir', 'mkscenariogrids'],
       )
