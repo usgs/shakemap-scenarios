@@ -1,7 +1,7 @@
 #!/bin/bash
 echo $PATH
 
-DEPS="numpy scipy matplotlib jupyter rasterio fiona xlrd xlwt pandas pytables basemap basemap-data-hires shapely h5py basemap-data-hires gdal==1.11.4 descartes paramiko pycrypto sphinx configobj pyproj pytest pytest-cov pytest-mpl psutil lxml flake8 pep8-naming"
+DEPARRAY=(numpy scipy matplotlib jupyter rasterio fiona xlrd xlwt pandas pytables basemap basemap-data-hires shapely h5py basemap-data-hires gdal==1.11.4 descartes paramiko pycrypto sphinx configobj pyproj pytest pytest-cov pytest-mpl psutil lxml flake8 pep8-naming)
 
 if [ "$#" -le 1 ]; then
     # turn off whatever other virtual environment user might be in
@@ -11,9 +11,9 @@ if [ "$#" -le 1 ]; then
 #    conda remove --name shake --all -y
     
     # create a new virtual environment called shake with the below list of dependencies installed into it
-    conda create --name shake --yes --channel conda-forge python=3.5 $DEPS -y
+    conda create --name shake --yes --channel conda-forge python=3.5 ${DEPARRAY[*]} -y
 else
-    conda install --yes --channel conda-forge python=3.5 $DEPS -y
+    conda install --yes --channel conda-forge python=3.5 ${DEPARRAY[*]} -y
 fi
 
 # activate the new environment
