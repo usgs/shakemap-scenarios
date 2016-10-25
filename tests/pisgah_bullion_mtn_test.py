@@ -1,6 +1,5 @@
 # stdlib imports
 import os
-import os.path
 import sys
 import io
 
@@ -19,11 +18,28 @@ def test_pisgah_bullion_mtn(tmpdir):
     # we trap for and are testing here.
 
     # make a temporary directory
-    p = tmpdir.mkdir("sub")
+    p = str(tmpdir.mkdir("sub"))
     jsonfile = 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json'
-    cmd = '%s -f %s -i 46 -s %s' % ('mkinputdir', jsonfile, p)
+
+    # Run mkinputdir
+    cmd = 'mkinputdir -f %s -i 46 -s %s' % (jsonfile, p)
     rc,so,se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
         print(se.decode())
+
+    # Check for errors
     assert se == b''
+
+    # Run mkscenariogrids
+    datadir = os.path.join(p, 'data')
+    id_str = next(os.walk(datadir))[1]
+    v = 'tests/data/SCalVs30.grd'
+    cmd = 'mkscenariogrids -e %s -g NSHMP14acr -r 0.1 '\
+          '-v %s -s %s' %(id_str[0], v, p)
+    rc,so,se = get_command_output(cmd)
+
+    # Check for errors
+    assert se == b''
+
+    
