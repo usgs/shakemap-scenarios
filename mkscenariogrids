@@ -407,7 +407,7 @@ def main(args):
         mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rupt, dx, imt.MMI(), stddev_types)
 
         mgrid = GMTGrid(mmi, smdict)
-        sgrid = GMTGrid(mmi_sd, smdict)
+        sgrid = GMTGrid(mmi_sd[0], smdict)
         mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
         sgrid.save(os.path.join(input_dir, 'mi_sd.grd'))
 

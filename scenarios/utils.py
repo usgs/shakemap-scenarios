@@ -33,10 +33,15 @@ def get_extent(source):
         tuple: lonmin, lonmax, latmin, latmax.
 
     """
-    # 
+    # Get arrays of lats/lons for fault verticies
     flt = source.getFault()
     lats = flt.getLats()
     lons = flt.getLons()
+
+    # Remove nans
+    lons = lats[~np.isnan(lons)]
+    lats = lats[~np.isnan(lats)]
+
     clat = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
     clon = 0.5 * (np.nanmax(lons) + np.nanmin(lons))
     mag = source.getEventParam('mag')
