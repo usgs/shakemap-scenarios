@@ -293,7 +293,7 @@ def main(args):
     stddev_types = [const.StdDev.TOTAL]
 
     #---------------------------------------------------------------------------
-    # Intensity measures
+    # Intensity measures (excluding MI)
     #---------------------------------------------------------------------------
 
     # Mapping between the IM notation in ShakeMap and the
@@ -391,25 +391,24 @@ def main(args):
             mgrid.save(os.path.join(input_dir, key + '_estimates.grd'))
             sgrid.save(os.path.join(input_dir, key + '_sd.grd'))
 
-        # Directivity factors
+        # Also write directivity factors to a file
         if event['directivity'] is True:
             fd1grd = GMTGrid(fd1, smdict)
             fd3grd = GMTGrid(fd3, smdict)
             fd1grd.save(os.path.join(input_dir, 'fd1.grd'))
             fd3grd.save(os.path.join(input_dir, 'fd3.grd'))
 
-        # MMI - get from PGV with VirtualIPE
-        sgmpe, swts =filter_gmpe_list(gmpes, wts, imt.PGV())
-        mgmpe = MultiGMPE.from_list(sgmpe, swts,
-                                    default_gmpes_for_site = site_gmpes)
-        gmice = WGRW12()
-        vipe = VirtualIPE.fromFuncs(mgmpe, gmice)
-        mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rupt, dx, imt.MMI(), stddev_types)
+    #---------------------------------------------------------------------------
+    # MMI - Use VirtualIPE
+    #---------------------------------------------------------------------------
+    gmice = WGRW12()
+    vipe = VirtualIPE.fromFuncs(mgmpe, gmice)
+    mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rupt, dx, imt.MMI(), stddev_types)
 
-        mgrid = GMTGrid(mmi, smdict)
-        sgrid = GMTGrid(mmi_sd[0], smdict)
-        mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
-        sgrid.save(os.path.join(input_dir, 'mi_sd.grd'))
+    mgrid = GMTGrid(mmi, smdict)
+    sgrid = GMTGrid(mmi_sd[0], smdict)
+    mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
+    sgrid.save(os.path.join(input_dir, 'mi_sd.grd'))
 
 
 if __name__ == '__main__':
