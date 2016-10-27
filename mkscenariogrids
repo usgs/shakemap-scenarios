@@ -97,7 +97,10 @@ def main(args):
     #---------------------------------------------------------------------------
     # Get list of GMPEs
     #---------------------------------------------------------------------------
+    wts_large_dist = None
+    dist_cutoff = None
     site_gmpes = None
+
     if args.gmpe == 'NSHMP14acr':
         gmpes = [AbrahamsonEtAl2014(), BooreEtAl2014(),
                  CampbellBozorgnia2014(), ChiouYoungs2014()]
@@ -113,7 +116,8 @@ def main(args):
                  Atkinson2008prime(),
                  SomervilleEtAl2001NSHMP2008()]
         wts = [0.06, 0.11, 0.06, 0.11, 0.11, 0.22, 0.15, 0.08, 0.1]
-        wts_largeR = [0.16, 0.0, 0.0, 0.17, 0.17, 0.3, 0.2, 0.0, 0.0]
+        wts_large_dist = [0.16, 0.0, 0.0, 0.17, 0.17, 0.3, 0.2, 0.0, 0.0]
+        dist_cutoff = 500 # km, use Rjb (not sure if this is right)
         site_gmpes = [AtkinsonBoore2006Modified2011()]
     elif args.gmpe == 'NSHMP14scr_grd':
         gmpes = [FrankelEtAl1996MwNSHMP2008(),
@@ -126,7 +130,8 @@ def main(args):
                  Atkinson2008prime(),
                  SomervilleEtAl2001NSHMP2008()]
         wts = [0.06, 0.13, 0.06, 0.13, 0.13, 0.25, 0.16, 0.08, 0.0]
-        wts_largeR = [0.16, 0.0, 0.0, 0.17, 0.17, 0.3, 0.2, 0.0, 0.0]
+        wts_large_dist = [0.16, 0.0, 0.0, 0.17, 0.17, 0.3, 0.2, 0.0, 0.0]
+        dist_cutoff = 500 # km, use Rjb (not sure if this is right)
         site_gmpes = [AtkinsonBoore2006Modified2011()]
     elif args.gmpe == 'NSHMPsub_i':
         gmpes = [AtkinsonBoore2003SInter(), ZhaoEtAl2006SInter(),
@@ -289,7 +294,7 @@ def main(args):
     #---------------------------------------------------------------------------
 
     # Only use total standard deviation for scenarios since
-    # we never had data to get bias.
+    # we never have data to get bias.
     stddev_types = [const.StdDev.TOTAL]
 
     #---------------------------------------------------------------------------
@@ -352,6 +357,18 @@ def main(args):
         lnmu, lnsd = mgmpe.get_mean_and_stddevs(
             sx, rupt, dx, iimt, stddev_types)
 
+        # If large distance weights are given, calculate those distances
+        if (wts_large_dist is not None) and (np.max(dx.rjb) > dist_cutoff):
+            sgmpe_large, swts_large = filter_gmpe_list(gmpes, wts_large_dist, iimt)
+            mgmpe_large = MultiGMPE.from_list(
+                sgmpe_large, swts_large, default_gmpes_for_site = site_gmpes)
+            lnmu_large, lnsd_large = mgmpe_large.get_mean_and_stddevs(
+                sx, rupt, dx, iimt, stddev_types)
+
+            # Stomp on lnmu and lnsd at large distances
+            dist = dx
+            lnmu[dx.rjb > dist_cutoff] = lnmu_large[dx.rjb > dist_cutoff]
+        
         #-----------------------------------------------------------------------
         # Handle directivity factors
         # NOTE: currently, the Rowshandel model does not provide
