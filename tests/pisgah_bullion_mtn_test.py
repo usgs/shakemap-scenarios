@@ -60,10 +60,9 @@ def test_pisgah_bullion_mtn(tmpdir):
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    id_str = next(os.walk(datadir))[1]
     v = 'tests/data/SCalVs30.grd'
     cmd = 'mkscenariogrids -e %s -g NSHMP14acr -r 0.1 '\
-          '-v %s -s %s' %(id_str[0], v, p)
+          '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
     rc,so,se = get_command_output(cmd)
 
     # Check for errors/warnings
