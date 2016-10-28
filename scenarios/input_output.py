@@ -17,6 +17,7 @@ from shakemap.utils.timeutils import ShakeDateTime
 
 from scenarios.utils import get_event_id
 from scenarios.utils import get_fault_edges
+from scenarios.utils import get_hypo
 from scenarios.utils import rake_to_type
 
 
@@ -238,13 +239,13 @@ def parse_bssc2014_ucerf(rupts, args):
             secind = secind + 1
 
         flt = Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
-                               width_sec, dip_sec, strike=strike_sec,
-                               reference=args.reference)
+                              width_sec, dip_sec, strike=strike_sec,
+                              reference=args.reference)
         flt._segment_index = new_seg_ind
 
         quads = flt.getQuadrilaterals()
 
-        id_str, eventsourcecode, real_desc, selquad = get_event_id(
+        id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind, quads)
 
         event = {'lat': 0,
@@ -260,37 +261,21 @@ def parse_bssc2014_ucerf(rupts, args):
         event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
 
         #-----------------------------------------------------------------------
-        # Hypocenter placement
-        #-----------------------------------------------------------------------
-        # top left
-        pp0 = Vector.fromPoint(geo.point.Point(
-            selquad[0].longitude, selquad[0].latitude, selquad[0].depth))
-        # top right
-        pp1 = Vector.fromPoint(geo.point.Point(
-            selquad[1].longitude, selquad[1].latitude, selquad[1].depth))
-        # bottom right
-        pp2 = Vector.fromPoint(geo.point.Point(
-            selquad[2].longitude, selquad[2].latitude, selquad[2].depth))
-        # bottom left
-        pp3 = Vector.fromPoint(geo.point.Point(
-            selquad[3].longitude, selquad[3].latitude, selquad[3].depth))
-        dxp = 0.5
-        dyp = 0.5
-        mp0 = pp0 + (pp1 - pp0) * dxp
-        mp1 = pp3 + (pp2 - pp3) * dxp
-        rp = mp0 + (mp1 - mp0) * dyp
-        hlat, hlon, hdepth = ecef2latlon(rp.x, rp.y, rp.z)
-
-        event['lat'] = hlat
-        event['lon'] = hlon
-        event['depth'] = hdepth
-
-        #-----------------------------------------------------------------------
-        # For map display get trace of top/bottom edges and
+        # For map display and hypo placement get trace of top/bottom edges and
         # put them in order.
         #-----------------------------------------------------------------------
 
         edges = get_fault_edges(quads, rev)
+
+        #-----------------------------------------------------------------------
+        # Hypocenter placement
+        #-----------------------------------------------------------------------
+
+        hlat, hlon, hdepth = get_hypo(edges, args)
+
+        event['lat'] = hlat
+        event['lon'] = hlon
+        event['depth'] = hdepth
 
         rdict = {'fault':flt,
                  'event':event,
@@ -300,6 +285,7 @@ def parse_bssc2014_ucerf(rupts, args):
                  'real_desc':real_desc,
                  'eventsourcecode':eventsourcecode
                 }
+
         rlist.append(rdict)
 
     return rlist
@@ -361,7 +347,7 @@ def parse_json(rupts, args):
 
         quads = flt.getQuadrilaterals()
 
-        id_str, eventsourcecode, real_desc, selquad = get_event_id(
+        id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind,
             quads, id = id)
 

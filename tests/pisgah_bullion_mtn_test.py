@@ -16,6 +16,10 @@ from shakemap.grind.fault import get_quad_slip
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
 
+homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
+shakedir = os.path.abspath(os.path.join(homedir, '..'))
+sys.path.insert(0, shakedir)
+
 
 def test_pisgah_bullion_mtn(tmpdir):
     # a segment of this fault causes a division by zero error that
@@ -117,3 +121,6 @@ def test_pisgah_bullion_mtn(tmpdir):
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
 
+
+#if __name__ == "__main__":
+#    test_pisgah_bullion_mtn() # not sure how to do this with tmpdir
