@@ -31,7 +31,7 @@ def test_pisgah_bullion_mtn(tmpdir):
 
     # directory holding test and target data for this event
     testinput = os.path.join(p, 'data/pisgahbullionmtnmesq_m7p27_se/input')
-    targetinput = 'tests/output/pisgah_bullion_mtn'
+    targetinput = 'tests/output/pisgah_bullion_mtn/input'
 
     #---------------------------------------------------------------------------
     # First test mkinputdir

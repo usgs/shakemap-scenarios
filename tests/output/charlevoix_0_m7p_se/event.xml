@@ -1,2 +1,0 @@
-<?xml version='1.0' encoding='US-ASCII'?>
-<earthquake id="charlevoix_0_m7p_se" lat="47.3874351218" lon="-69.9046876919" mag="7.0" year="2016" month="10" day="27" hour="14" minute="53" second="52" timezone="UTC" depth="17.8684789104" locstring="Charlevoix_RLME" description="Median ground motions" created="" otime="" type="SS" network="" reference="" rake="0" directivity="False" eventsourcecode="charlevoixrlmexls_m7p_se"/>

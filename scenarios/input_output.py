@@ -364,36 +364,22 @@ def parse_json(rupts, args):
         event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
 
         #-----------------------------------------------------------------------
+        # For map display and hypo placement get trace of top/bottom edges and
+        # put them in order.
+        #-----------------------------------------------------------------------
+
+        edges = get_fault_edges(quads)
+
+        #-----------------------------------------------------------------------
         # Hypocenter placement
         #-----------------------------------------------------------------------
-        # top left
-        pp0 = Vector.fromPoint(geo.point.Point(
-            selquad[0].longitude, selquad[0].latitude, selquad[0].depth))
-        # top right
-        pp1 = Vector.fromPoint(geo.point.Point(
-            selquad[1].longitude, selquad[1].latitude, selquad[1].depth))
-        # bottom right
-        pp2 = Vector.fromPoint(geo.point.Point(
-            selquad[2].longitude, selquad[2].latitude, selquad[2].depth))
-        # bottom left
-        pp3 = Vector.fromPoint(geo.point.Point(
-            selquad[3].longitude, selquad[3].latitude, selquad[3].depth))
-        dxp = 0.5
-        dyp = 0.5
-        mp0 = pp0 + (pp1 - pp0) * dxp
-        mp1 = pp3 + (pp2 - pp3) * dxp
-        rp = mp0 + (mp1 - mp0) * dyp
-        hlat, hlon, hdepth = ecef2latlon(rp.x, rp.y, rp.z)
+
+        hlat, hlon, hdepth = get_hypo(edges, args)
+        
 
         event['lat'] = hlat
         event['lon'] = hlon
         event['depth'] = hdepth
-
-        #-----------------------------------------------------------------------
-        # For map display get trace of top/bottom edges and
-        # put them in order.
-        #-----------------------------------------------------------------------
-        edges = get_fault_edges(quads)
 
         rdict = {'fault':flt,
                  'event':event,
