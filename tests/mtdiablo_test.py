@@ -16,18 +16,22 @@ from shakemap.grind.fault import get_quad_slip
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
 
+homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
+shakedir = os.path.abspath(os.path.join(homedir, '..'))
+sys.path.insert(0, shakedir)
 
-def test_charlevoix_0(tmpdir):
+
+def test_mtdiablo(tmpdir):
     # a segment of this fault causes a division by zero error that
     # we trap for and are testing here.
 
     # make a temporary directory; read in rupture file
     p = str(tmpdir.mkdir("sub"))
-    jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
+    jsonfile = 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json'
 
     # directory holding test and target data for this event
-    testinput = os.path.join(p, 'data/charlevoix_0_m7p_se/input')
-    targetinput = 'tests/output/charlevoix_0_m7p_se/input'
+    testinput = os.path.join(p, 'data/mountdiablothrustell_m6p67_se/input')
+    targetinput = 'tests/output/mtdiablo/input'
 
     #---------------------------------------------------------------------------
     # First test mkinputdir
@@ -48,21 +52,25 @@ def test_charlevoix_0(tmpdir):
     # Note: Not checking event.xml because the timestamp breaks cmp comparison.
     #       Would need to parse and to tag comaprisons. Not worth it. 
 
-    target = os.path.join(targetinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
+    target = os.path.join(
+        targetinput, 'mountdiablothrustell_m6p67_se_for-map_fault.txt')
+    test = os.path.join(
+        testinput, 'mountdiablothrustell_m6p67_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
-    target = os.path.join(targetinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
+    target = os.path.join(
+        targetinput, 'mountdiablothrustell_m6p67_se-fault-for-calc.txt')
+    test = os.path.join(
+        testinput, 'mountdiablothrustell_m6p67_se-fault-for-calc.txt')
     assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    v = 'tests/data/CharlevoixVs30.grd'
-    cmd = 'mkscenariogrids -e %s -g NSHMP14scr_rlme -r 0.1 '\
-          '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
+    v = 'tests/data/NCalVs30.grd'
+    cmd = 'mkscenariogrids -e %s -g NSHMP14acr -r 0.1 '\
+          '-v %s -s %s' %('mountdiablothrustell_m6p67_se', v, p)
     rc,so,se = get_command_output(cmd)
 
     # Check for errors/warnings
@@ -117,3 +125,6 @@ def test_charlevoix_0(tmpdir):
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
 
+
+#if __name__ == "__main__":
+#    test_pisgah_bullion_mtn() # not sure how to do this with tmpdir

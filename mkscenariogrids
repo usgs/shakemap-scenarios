@@ -214,15 +214,17 @@ def main(args):
 
     lonmin, lonmax, latmin, latmax = get_extent(source)
 
-    lats = flt.getLats()
-    lons = flt.getLons()
-    lon_mid = 0.5 * (np.nanmax(lons) + np.nanmin(lons))
-    lat_mid = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
+    # Adjust extent to be divisible by resolution
+    res = args.res
+    lonmin = res * np.round(lonmin / res)
+    lonmax = res * np.round(lonmax / res)
+    latmin = res * np.round(latmin / res)
+    latmax = res * np.round(latmax / res)
+
     lonspan = float(lonmax - lonmin)
     latspan = float(latmax - latmin)
 
     # Adjust number of cells if necessary
-    res = args.res
     nx = np.floor(lonspan / res) + 1
     ny = np.floor(latspan / res) + 1
     ncell = nx * ny
@@ -237,33 +239,16 @@ def main(args):
         ny = np.floor(latspan / res) + 1
         ncell = nx * ny
 
-    # Adjust extents to be divisible by res
-    lonmin = res * np.round(lonmin / res)
-    lonmax = res * np.round(lonmax / res)
-    latmin = res * np.round(latmin / res)
-    latmax = res * np.round(latmax / res)
-
-    # Recompute latspan and lonspan
-    lonspan = float(lonmax - lonmin)
-    latspan = float(latmax - latmin)
-
     # buffer to increase grid so that it doesn't barf when sent to ShakeMap
-    buf = 2 * res
-    west = lon_mid - lonspan / 2.0 - buf
-    east = lon_mid + lonspan / 2.0 + buf
-    north = lat_mid + latspan / 2.0 + buf
-    south = lat_mid - latspan / 2.0 - buf
-
-    # Shakemap uses epicenter as ceter, solve for offsets to match
-    latoff = event['lat'] - lat_mid  # move map south
-    lonoff = lon_mid - event['lon']  # move map east
+#    buf = 2 * res
 
     # Geodictionary for this ShakeMap
-    tmpdict = {'xmin': west, 'xmax': east,
-               'ymin': south, 'ymax': north,
+    tmpdict = {'xmin': lonmin, 'xmax': lonmax,
+               'ymin': latmin, 'ymax': latmax,
                'dx': res, 'dy': res,
                'nx': nx, 'ny': ny}
     smdict = GeoDict(tmpdict, adjust='bounds')
+    print(smdict)
 
     #---------------------------------------------------------------------------
     # Make rupture context
@@ -276,11 +261,6 @@ def main(args):
     vs30filename = args.vs30
     vs30grid = GMTGrid.load(vs30filename, smdict, resample=True)
     vs30geodict = vs30grid.getGeoDict()
-    smdx = vs30geodict.dx
-    smdy = vs30geodict.dy
-    smnx = vs30geodict.nx
-    smny = vs30geodict.ny
-    bounds = (west, east, south, north)
 
     # Sites object
     sites = Sites(vs30grid)
@@ -309,8 +289,8 @@ def main(args):
     #---------------------------------------------------------------------------
     # Mesh calculations
     #---------------------------------------------------------------------------
-    lats = np.linspace(north, south, smny)
-    lons = np.linspace(west, east, smnx)
+    lats = np.linspace(smdict.ymax, smdict.ymin, smdict.ny)
+    lons = np.linspace(smdict.xmin, smdict.xmax, smdict.nx)
     lon, lat = np.meshgrid(lons, lats)
     dep = np.zeros_like(lon)
 

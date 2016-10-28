@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<earthquake id="mountdiablothrustell_m6p67_se" lat="37.8513734815" lon="-121.886630814" mag="6.67" year="2016" month="10" day="28" hour="15" minute="22" second="14" timezone="UTC" depth="13.1198612769" locstring="Mount Diablo Thrust" description="Median ground motions" created="" otime="" type="RS" network="" reference="" rake="90.0" directivity="False" eventsourcecode="mountdiablothrustell_m6p67_se"/>

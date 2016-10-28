@@ -3,6 +3,7 @@ import os
 import time
 import json
 import argparse
+import copy
 
 import numpy as np
 from lxml import etree
@@ -19,6 +20,91 @@ from shakemap.utils.ecef import latlon2ecef, ecef2latlon
 from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
 
+
+def get_hypo(edges, args):
+    """
+    Args:
+        edges (list): A list of two lists of points; the first list corresponds
+            to the top edge and the second is the bottom edge. 
+        args (ArgumentParser): argparse object. 
+
+    Returns:
+        tuple: Hypocenter (lat, lon depth).
+
+    """
+    top = copy.deepcopy(edges[0])
+    bot = copy.deepcopy(edges[1])
+
+    # Along strike and along dip distance (0-1)
+    # NOTE: This could also be made a function of mechanism
+    if args.dirind == -1:
+        # no directivity
+        dxp = 0.5 # strike
+        dyp = 0.6 # dip
+    elif args.dirind == 0:
+        # first unilateral
+        dxp = 0.05 # strike
+        dyp = 0.6 # dip
+    elif args.dirind == 0:
+        # second unilateral
+        dxp = 0.95 # strike
+        dyp = 0.6 # dip
+    elif args.dirind == 0:
+        # bilateral
+        dxp = 0.5 # strike
+        dyp = 0.6 # dip
+        
+
+    # Convert to ECEF
+    topxy = [Vector.fromPoint(geo.point.Point(p.longitude,
+                                              p.latitude,
+                                              p.depth))
+             for p in top]
+    botxy = [Vector.fromPoint(geo.point.Point(p.longitude,
+                                              p.latitude,
+                                              p.depth))
+             for p in bot]
+
+    # Compute distances along edges for each vertex
+    t0 = topxy[0]
+    b0 = botxy[0]
+    topdist = np.array([t0.distance(p) for p in topxy])
+    botdist = np.array([b0.distance(p) for p in botxy])
+
+    # Normalize distance from 0 to 1
+    topdist = topdist/np.max(topdist)
+    botdist = botdist/np.max(botdist)
+
+    #---------------------------------------------------------------------------
+    # Find points of surrounding quad
+    #---------------------------------------------------------------------------
+    tix0 = np.amax(np.where(topdist < dxp))
+    tix1 = np.amin(np.where(topdist > dxp))
+    bix0 = np.amax(np.where(botdist < dxp))
+    bix1 = np.amin(np.where(botdist > dxp))
+
+    # top left
+    pp0 = topxy[tix0]
+
+    # top right
+    pp1 = topxy[tix1]
+
+    # bottom right
+    pp2 = botxy[bix0]
+
+    # bottom left
+    pp3 = botxy[bix1]
+
+    # How far from pp0 to pp1, and pp2 to pp3?
+    dxt = (dxp - topdist[tix0])/(topdist[tix1] - topdist[tix0])
+    dxb = (dxp - botdist[tix0])/(botdist[tix1] - botdist[tix0])
+
+    mp0 = pp0 + (pp1 - pp0) * dxt
+    mp1 = pp3 + (pp2 - pp3) * dxb
+    rp = mp0 + (mp1 - mp0) * dyp
+    hlat, hlon, hdepth = ecef2latlon(rp.x, rp.y, rp.z)
+
+    return hlat, hlon, hdepth
 
 def get_extent(source):
     """
@@ -39,7 +125,7 @@ def get_extent(source):
     lons = flt.getLons()
 
     # Remove nans
-    lons = lats[~np.isnan(lons)]
+    lons = lons[~np.isnan(lons)]
     lats = lats[~np.isnan(lats)]
 
     clat = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
@@ -291,8 +377,6 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
 
     nq = len(quads)
     if (i_dir == 0) and (directivity):
-        # Put hypo in center of first quad
-        selquad = quads[0]
         if squadrant == 1:
             ddes = "Northern directivity"
         if squadrant == 2:
@@ -302,12 +386,8 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
         if squadrant == 4:
             ddes = "Western directivity"
     elif (i_dir == 1) or (not directivity):
-        # Put hypo in center of middle quad
-        selquad = quads[int(np.round(nq / 2, 0)) - 1]
         ddes = "Bilateral directivity"
     elif (i_dir == 2) and (directivity):
-        # Put hypo in center of last quad
-        selquad = quads[nq - 1]
         if squadrant == 1:
             ddes = "Southern directivity"
         if squadrant == 2:
@@ -334,13 +414,13 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
 
     eventsourcecode = "%s_M%s_se" % (event_legal[:20], mag_str)
     eventsourcecode = eventsourcecode.lower()
-    return id_str, eventsourcecode, real_desc, selquad
+    return id_str, eventsourcecode, real_desc
 
 def get_fault_edges(q, rev = None):
     """
     Return a list of the top and bottom edges of the fault. This is
-    useful as a simplified visual representation of the fault but not
-    used for calculaitons. 
+    useful as a simplified visual representation of the fault and placing
+    the hypocenter but not used for distance calculaitons. 
 
     Args:
         q (list): List of quads.
