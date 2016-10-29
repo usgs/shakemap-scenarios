@@ -6,7 +6,6 @@ import warnings
 
 import numpy as np
 
-
 #-------------------------------------------------------------------------------
 # Openquake utilities
 from openquake.hazardlib import imt, const
@@ -60,10 +59,12 @@ def main(args):
     cmd = 'ls %s/*fault-for-calc.txt' % (input_dir)
     rc, so, se = get_command_output(cmd)
 
-    # probably need to add some error checking here
-
-    ruptfile = so.decode('utf-8').strip()
-    flt = fault.Fault.readFaultFile(ruptfile)
+    if rc is True:
+        # There is a fault
+        ruptfile = so.decode('utf-8').strip()
+        flt = fault.Fault.readFaultFile(ruptfile)
+    else:
+        flt = None
 
     #---------------------------------------------------------------------------
     # Get list of GMPEs
@@ -72,9 +73,18 @@ def main(args):
     if args.gmpe == 'NSHMP14shallow':
         # Select between SCR and ACR
         stable = is_stable(event['lon'], event['lat'])
-        
-        # if SCR check for fault
-        
+
+        if stable is True:
+            # if SCR check for fault
+            if flt is None:
+                gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
+                    nshmp14_scr_grd.get_weights()
+            else:
+                gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
+                    nshmp14_scr_rlme.get_weights()
+        else:
+            gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
+                nshmp14_acr.get_weights()
     elif args.gmpe == 'NSHMP14acr':
         gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
             nshmp14_acr.get_weights()
