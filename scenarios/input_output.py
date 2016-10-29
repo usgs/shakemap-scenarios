@@ -62,6 +62,7 @@ def read_event_xml(file):
              'id': id_str,
              'locstring': lstring,
              'type': mech,
+             'mech': mech,
              'time': sdt.strftime('%Y-%m-%dT%H:%M:%SZ'),
              'timezone': 'UTC',
              'directivity':directivity,

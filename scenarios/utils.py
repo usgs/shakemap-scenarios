@@ -121,15 +121,22 @@ def get_extent(source):
     """
     # Get arrays of lats/lons for fault verticies
     flt = source.getFault()
-    lats = flt.getLats()
-    lons = flt.getLons()
 
-    # Remove nans
-    lons = lons[~np.isnan(lons)]
-    lats = lats[~np.isnan(lats)]
+    # Is there a fault?
+    if flt is not None:
+        lats = flt.getLats()
+        lons = flt.getLons()
 
-    clat = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
-    clon = 0.5 * (np.nanmax(lons) + np.nanmin(lons))
+        # Remove nans
+        lons = lons[~np.isnan(lons)]
+        lats = lats[~np.isnan(lats)]
+
+        clat = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
+        clon = 0.5 * (np.nanmax(lons) + np.nanmin(lons))
+    else:
+        clat = source.getEventParam('lat')
+        clon = source.getEventParam('lon')
+
     mag = source.getEventParam('mag')
 
     # Is this a stable or active tectonic event?
@@ -148,14 +155,18 @@ def get_extent(source):
         else:
             mindist_km = 63.4 * mag**2 - 465.4 * mag + 581.3
 
-    # Apply an upper limit on extent. This should only matter for large magnitudes
-    # (> ~8.25) in stable tectonic environments. 
+    # Apply an upper limit on extent. This should only matter for large
+    # magnitudes (> ~8.25) in stable tectonic environments. 
     if mindist_km > 1000.:
         mindist_km = 1000.
 
     # Projection
     proj = get_orthographic_projection(clon - 4, clon + 4, clat + 4, clat - 4)
-    fltx, flty = proj(lons, lats)
+    if flt is not None:
+        fltx, flty = proj(lons, lats)
+    else:
+        fltx, flty = proj(clon, clat)
+
     xmin = np.nanmin(fltx) - mindist_km
     ymin = np.nanmin(flty) - mindist_km
     xmax = np.nanmax(fltx) + mindist_km
