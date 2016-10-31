@@ -7,6 +7,7 @@ import filecmp
 # third party
 import numpy as np
 import pytest
+import tempfile
 
 from shakemap.grind.fault import Fault
 from shakemap.utils.exception import ShakeMapException
@@ -16,10 +17,16 @@ from shakemap.grind.fault import get_quad_slip
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
 
+homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
+shakedir = os.path.abspath(os.path.join(homedir, '..'))
+sys.path.insert(0, shakedir)
+
 
 def test_charlevoix_0(tmpdir):
     # make a temporary directory; read in rupture file
-    p = str(tmpdir.mkdir("sub"))
+    p = os.path.join(str(tmpdir), "sub")
+    if not os.path.exists(p):
+        os.makedirs(p)
     jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
 
     # directory holding test and target data for this event
@@ -58,7 +65,7 @@ def test_charlevoix_0(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = 'tests/data/CharlevoixVs30.grd'
-    cmd = 'mkscenariogrids -e %s -g NSHMP14scr_rlme -r 0.1 '\
+    cmd = 'mkscenariogrids -e %s -g nshmp14_scr_rlme -r 0.1 '\
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
@@ -116,7 +123,9 @@ def test_charlevoix_0(tmpdir):
 
 def test_charlevoix_0_shallow(tmpdir):
     # make a temporary directory; read in rupture file
-    p = str(tmpdir.mkdir("sub"))
+    p = os.path.join(str(tmpdir), "sub")
+    if not os.path.exists(p):
+        os.makedirs(p)
     jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
 
     # directory holding test and target data for this event
@@ -155,7 +164,7 @@ def test_charlevoix_0_shallow(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = 'tests/data/CharlevoixVs30.grd'
-    cmd = 'mkscenariogrids -e %s -g NSHMP14shallow -r 0.1 '\
+    cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
@@ -213,7 +222,9 @@ def test_charlevoix_0_shallow(tmpdir):
 
 def test_charlevoix_0_no_fault(tmpdir):
     # make a temporary directory; read in rupture file
-    p = str(tmpdir.mkdir("sub"))
+    p = os.path.join(str(tmpdir), "sub")
+    if not os.path.exists(p):
+        os.makedirs(p)
     jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
 
     # directory holding test and target data for this event
@@ -243,7 +254,7 @@ def test_charlevoix_0_no_fault(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = 'tests/data/CharlevoixVs30.grd'
-    cmd = 'mkscenariogrids -e %s -g NSHMP14shallow -r 0.1 '\
+    cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
@@ -299,4 +310,10 @@ def test_charlevoix_0_no_fault(tmpdir):
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
+
+if __name__ == "__main__":
+    td = tempfile.TemporaryDirectory()
+    test_charlevoix_0(td.name)
+    test_charlevoix_0_shallow(td.name)
+    test_charlevoix_0_no_fault(td.name)
 

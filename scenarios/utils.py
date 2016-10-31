@@ -12,7 +12,6 @@ from shapely.geometry import Polygon
 from shapely.geometry import Point
 
 import openquake.hazardlib.geo as geo
-from openquake.hazardlib.imt import PGA, PGV, SA
 from openquake.hazardlib.geo.utils import get_orthographic_projection
 
 import shakemap.grind.fault as fault
@@ -218,69 +217,6 @@ def is_stable(lon, lat):
     p = Point((lon, lat))
     return p.within(poly)
 
-
-def filter_gmpe_list(gmpes, wts, imt):
-    """
-    Method to remove GMPEs from the GMPE list that are not applicable
-    to a specific IMT. Rescales the weights to sum to one. 
-
-    Args:
-        gmpes (list): List of GMPE instances. 
-        wts (list): List of floats indicating the weight of the GMPEs. 
-
-    Returns:
-        tuple: List of GMPE instances and list of weights. 
-
-    """
-    per_max = [np.max(get_gmpe_sa_periods(g)) for g in gmpes]
-    per_min = [np.min(get_gmpe_sa_periods(g)) for g in gmpes]
-    if imt == PGA():
-        sgmpe = [g for g in gmpes if imt in g.COEFFS.non_sa_coeffs]
-        swts = [w for g, w in zip(gmpes, wts) if imt in g.COEFFS.non_sa_coeffs]
-    elif(imt == PGV()):
-        sgmpe = []
-        swts = []
-        for i in range(len(gmpes)):
-            if (imt in gmpes[i].COEFFS.non_sa_coeffs) or\
-               (per_max[i] >= 1.0 and per_min[i] <= 1.0):
-               sgmpe.append(gmpes[i])
-               swts.append(wts[i])
-    else:
-        per = imt.period
-        sgmpe = []
-        swts = []
-        for i in range(len(gmpes)):
-            if (per_max[i] >= per and per_min[i] <= per):
-               sgmpe.append(gmpes[i])
-               swts.append(wts[i])
-
-    if len(sgmpe) == 0:
-        raise Exception('No applicable GMPEs from GMPE list for %s' %val)
-
-    # Scale weights to sum to one
-    swts = np.array(swts)
-    swts = swts/np.sum(swts)
-
-    return sgmpe, swts
-
-
-
-def get_gmpe_sa_periods(gmpe):
-    """
-    Method to extract the SA periods defined by a GMPE. 
-
-    Args: 
-        gmpe (GMPE): A GMPE instance. 
-
-    Retunrs:
-        list: List of periods. 
-
-    """
-
-    ctab = gmpe.COEFFS.sa_coeffs
-    ilist = list(ctab.keys())
-    per = [i.period for i in ilist]
-    return per
 
 
 

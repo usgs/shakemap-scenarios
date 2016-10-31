@@ -18,20 +18,15 @@ import shakemap.grind.fault as fault
 from shakemap.grind.source import Source
 from shakemap.grind.distance import Distance
 from shakemap.grind.sites import Sites
-from shakemap.grind.multigmpe import MultiGMPE
+from shakemap.grind.multigmpe import DualDistanceWeights
+from shakemap.grind.multigmpe import filter_gmpe_list
 from shakemap.grind.directivity.rowshandel2013 import Rowshandel2013
 from shakemap.utils.timeutils import ShakeDateTime
 from shakemap.grind.gmice.wgrw12 import WGRW12
 from shakemap.grind.virtualipe import VirtualIPE
-from shakemap.grind.gmpe_sets import nshmp14_acr
-from shakemap.grind.gmpe_sets import nshmp14_scr_rlme
-from shakemap.grind.gmpe_sets import nshmp14_scr_grd
-from shakemap.grind.gmpe_sets import nshmp14_sub_i
-from shakemap.grind.gmpe_sets import nshmp14_sub_s
 
 from impactutils.io.cmd import get_command_output
 
-from scenarios.utils import filter_gmpe_list
 from scenarios.utils import is_stable
 from scenarios.utils import get_extent
 from scenarios.input_output import read_event_xml
@@ -67,41 +62,29 @@ def main(args):
         flt = None
 
     #---------------------------------------------------------------------------
-    # Get list of GMPEs
+    # Get DualDistanceWeights instance
     #---------------------------------------------------------------------------
 
-    if args.gmpe == 'NSHMP14shallow':
+    set_name = args.gmpe
+    if set_name == 'nshmp14_shallow':
         # Select between SCR and ACR
         stable = is_stable(event['lon'], event['lat'])
 
         if stable is True:
             # if SCR check for fault
             if flt is None:
-                gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-                    nshmp14_scr_grd.get_weights()
+                set_name = 'nshmp14_scr_grd'
             else:
-                gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-                    nshmp14_scr_rlme.get_weights()
+                set_name = 'nshmp14_scr_rlme'
         else:
-            gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-                nshmp14_acr.get_weights()
-    elif args.gmpe == 'NSHMP14acr':
-        gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-            nshmp14_acr.get_weights()
-    elif args.gmpe == 'NSHMP14scr_rlme':
-        gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-            nshmp14_scr_rlme.get_weights()
-    elif args.gmpe == 'NSHMP14scr_grd':
-        gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-            nshmp14_scr_grd.get_weights()
-    elif args.gmpe == 'NSHMPsub_i':
-        gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-            nshmp14_sub_i.get_weights()
-    elif args.gmpe == 'NSHMPsub_s':
-        gmpes, wts, wts_large_dist, dist_cutoff, site_gmpes = \
-            nshmp14_sub_s.get_weights()
-    else:
-        raise Exception('Specified an unsupported GMPE.')
+            set_name = 'nshmp14_acr'
+    ddw = DualDistanceWeights.from_set_name(set_name)
+
+    # Need GMPE list for distances etc.
+    gmpes = ddw.mgmpe_small.GMPES
+    # Note: Should make this union of small and large lists to be thorough. But
+    #       this should have no practical implications since large distance sets
+    #       are always a subset of small distance sets. 
 
     #---------------------------------------------------------------------------
     # Make source instance and compute extent
@@ -144,7 +127,6 @@ def main(args):
                'dx': res, 'dy': res,
                'nx': nx, 'ny': ny}
     smdict = GeoDict(tmpdict, adjust='bounds')
-    print(smdict)
 
     #---------------------------------------------------------------------------
     # Make rupture context
@@ -229,27 +211,11 @@ def main(args):
     for key, val in imt_dict.items():
         iimt = imt.from_string(val)
 
-        # Remove those GMPEs that are not applicable to this IMT and redistribute
-        # the weights. 
-        sgmpe, swts = filter_gmpe_list(gmpes, wts, iimt)
-
-        mgmpe = MultiGMPE.from_list(sgmpe, swts,
-                                    default_gmpes_for_site = site_gmpes)
-        lnmu, lnsd = mgmpe.get_mean_and_stddevs(
-            sx, rupt, dx, iimt, stddev_types)
-
-        # If large distance weights are given, calculate those distances
-        if (wts_large_dist is not None) and (np.max(dx.rjb) > dist_cutoff):
-            sgmpe_large, swts_large = filter_gmpe_list(gmpes, wts_large_dist, iimt)
-            mgmpe_large = MultiGMPE.from_list(
-                sgmpe_large, swts_large, default_gmpes_for_site = site_gmpes)
-            lnmu_large, lnsd_large = mgmpe_large.get_mean_and_stddevs(
+        # Get DualDistanceWeights instance for this imt
+        ddw = DualDistanceWeights.from_set_name(set_name, iimt)
+        lnmu, lnsd = ddw.get_mean_and_stddevs(
                 sx, rupt, dx, iimt, stddev_types)
 
-            # Stomp on lnmu and lnsd at large distances
-            dist = dx
-            lnmu[dx.rjb > dist_cutoff] = lnmu_large[dx.rjb > dist_cutoff]
-        
         #-----------------------------------------------------------------------
         # Handle directivity factors
         # NOTE: currently, the Rowshandel model does not provide
@@ -300,7 +266,7 @@ def main(args):
     # MMI - Use VirtualIPE
     #---------------------------------------------------------------------------
     gmice = WGRW12()
-    vipe = VirtualIPE.fromFuncs(mgmpe, gmice)
+    vipe = VirtualIPE.fromFuncs(ddw.mgmpe_small, gmice)
     mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rupt, dx, imt.MMI(), stddev_types)
 
     mgrid = GMTGrid(mmi, smdict)
@@ -326,14 +292,14 @@ if __name__ == '__main__':
         '-v', '--vs30',
         help='Specifies the path to the Vs30 grid to use.')
     parser.add_argument(
-        '-g', '--gmpe', default='NSHMP14shallow',
-        help='Select GMPE(s). Note that NSHMP14shalllow automatically selects '\
-             'between NSHMP14acr, NSHMP14scr_rlme, and NSHMP14scr_grd, but '\
+        '-g', '--gmpe', default='nshmp14_shallow',
+        help='Select GMPE(s). Note that nshmp14_shalllow automatically selects '\
+             'between nshmp14_acr, nshmp14_scr_rlme, and nshmp14_scr_grd, but '\
              'this currently only works in US.',
         choices=[
-            'NSHMP14shallow', 
-            'NSHMP14acr', 'NSHMP14scr_rlme', 'NSHMP14scr_grd',
-            'NSHMPsub_i', 'NSHMPsub_s'])
+            'nshmp14_shallow', 
+            'nshmp14_acr', 'nshmp14_scr_rlme', 'nshmp14_scr_grd',
+            'nshmp14_sub_i', 'nshmp14_sub_s'])
     parser.add_argument(
         '-r', '--res', default=30/60/60, type=float,
         help='The resolution in decimal degrees; default is 30/60/60.')

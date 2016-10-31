@@ -7,6 +7,7 @@ import filecmp
 # third party
 import numpy as np
 import pytest
+import tempfile
 
 from shakemap.grind.fault import Fault
 from shakemap.utils.exception import ShakeMapException
@@ -26,7 +27,9 @@ def test_pisgah_bullion_mtn(tmpdir):
     # we trap for and are testing here.
 
     # make a temporary directory; read in rupture file
-    p = str(tmpdir.mkdir("sub"))
+    p = os.path.join(str(tmpdir), "sub")
+    if not os.path.exists(p):
+        os.makedirs(p)
     jsonfile = 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json'
 
     # directory holding test and target data for this event
@@ -65,7 +68,7 @@ def test_pisgah_bullion_mtn(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = 'tests/data/SCalVs30.grd'
-    cmd = 'mkscenariogrids -e %s -g NSHMP14acr -r 0.1 '\
+    cmd = 'mkscenariogrids -e %s -g nshmp14_acr -r 0.1 '\
           '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
     rc,so,se = get_command_output(cmd)
 
@@ -126,7 +129,9 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     # gives the same results. 
 
     # make a temporary directory; read in rupture file
-    p = str(tmpdir.mkdir("sub"))
+    p = os.path.join(str(tmpdir), "sub")
+    if not os.path.exists(p):
+        os.makedirs(p)
     jsonfile = 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json'
 
     # directory holding test and target data for this event
@@ -165,7 +170,7 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = 'tests/data/SCalVs30.grd'
-    cmd = 'mkscenariogrids -e %s -g NSHMP14shallow -r 0.1 '\
+    cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
           '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
     rc,so,se = get_command_output(cmd)
 
@@ -222,5 +227,7 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     cmp(test, target)
 
 
-#if __name__ == "__main__":
-#    test_pisgah_bullion_mtn() # not sure how to do this with tmpdir
+if __name__ == "__main__":
+    td = tempfile.TemporaryDirectory()
+    test_pisgah_bullion_mtn(td.name)
+    test_pisgah_bullion_mtn_shallow(td.name)
