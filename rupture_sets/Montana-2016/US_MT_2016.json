@@ -1,0 +1,203 @@
+{
+    "name": "2016 Montanta Scenarios",
+    "info": "Derived by expert opinion with input from Michael Stickney, Kathy Haller (Great Falls deagg).",
+    "events":
+    [
+	{
+	    "id":"greatfalls_se",
+	    "desc":"Great Falls",
+	    "mag":6.01,
+	    "width":12.3,
+	    "dip":90,
+	    "rake":90,
+	    "ztor":1.0,
+	    "lats":[47.542, 47.499],
+	    "lons":[-111.435, -111.406]
+	},
+        {
+            "id":"helena_valley_m5.5_se",
+            "desc":"Helena Valley M5.5 Scenario Aftershock",
+            "mag":5.5
+        },
+        {
+            "id":"helena_valley_m6.3_se",
+            "desc":"Helena Valley M6.3 Scenario",
+            "mag":6.3,
+            "width":14,
+            "dip":90,
+            "ztor":0,
+            "lats":[46.77, 46.74],
+            "lons":[-112.07, -111.97]
+        },
+        {
+            "id":"montana_641c_se",
+            "desc":"Red Rock Fault; Sheep Creeks segment; #641c",
+            "mag":6.5,
+            "width":19.5772,
+            "dip":54.8645,
+            "ztor":0,
+            "lats":[44.6037, 44.7053],
+            "lons":[-112.6157, -112.7419]
+        },
+        {
+            "id":"montana_642b_se",
+            "desc":"Emigrant Fault; south segment; #642b",
+            "mag":6.8,
+            "width":19.5807,
+            "dip":54.8484,
+            "ztor":0,
+            "lats":[45.3801, 45.1993],
+            "lons":[-110.5812, -110.8992]
+        },
+        {
+            "id":"montana_643a_se",
+            "desc":"Centennial Fault; Western Centennial Valley segment; #643a",
+            "mag":6.6,
+            "width":19.0681,
+            "dip":57.0914,
+            "ztor":0,
+            "lats":[44.5907, 44.606],
+            "lons":[-111.9427, -112.1803]
+        },
+        {
+            "id":"montana_644b_se",
+            "desc":"Blacktail Fault, Cottonwood section; #644b",
+            "mag":6.7,
+            "width":19.5827,
+            "dip":54.84,
+            "ztor":0,
+            "lats":[44.9058, 45.0653],
+            "lons":[-112.3809, -112.645]
+        },
+        {
+            "id":"montana_648a_se",
+            "desc":"Red Rock Hills Fault, Monument Hill section; #648a",
+            "mag":6.4,
+            "width":19.5793,
+            "dip":54.8554,
+            "ztor":0,
+            "lats":[44.8543, 44.9474],
+            "lons":[-112.6959, -112.7817]
+        },
+        {
+            "id":"montana_649_se",
+            "desc":"Tobacco Root Fault; #649",
+            "mag":6.8,
+            "width":19.5154,
+            "dip":55.116,
+            "ztor":0,
+            "lats":[45.7926, 45.6899, 45.5391],
+            "lons":[-112.1265, -112.137, -112.2479]
+        },
+        {
+            "id":"montana_655b_se",
+            "desc":"Madison Fault; Madison Canyon segment; #655b",
+            "mag":6.9,
+            "width":19.5827,
+            "dip":54.8404,
+            "ztor":0,
+            "lats":[45.046, 44.7469],
+            "lons":[-111.5933, -111.4344]
+        },
+        {
+            "id":"montana_663_se",
+            "desc":"Bitterroot Fault; #663",
+            "mag":7.2,
+            "width":19.5075,
+            "dip":55.1354,
+            "ztor":0,
+            "lats":[45.9248, 46.0324, 46.3854, 46.6806],
+            "lons":[-114.1436, -114.2204, -114.2467, -114.1096]
+        },
+        {
+            "id":"montana_666_se",
+            "desc":"Ruby Range Northern Border Fault; #666",
+            "mag":6.6,
+            "width":17.5477,
+            "dip":65.7951,
+            "ztor":0,
+            "lats":[45.2642, 45.2837, 45.3925],
+            "lons":[-112.0381, -112.1291, -112.2183]
+        },
+        {
+            "id":"montana_688_se",
+            "desc":"Continental Fault; #688",
+            "mag":6.5,
+            "width":16.0978,
+            "dip":68.745,
+            "ztor":0,
+            "lats":[46.053, 45.9],
+            "lons":[-112.498, -112.426]
+        },
+        {
+            "id":"montana_691_se",
+            "desc":"Bridger Fault; #691",
+            "mag":7,
+            "width":18.8362,
+            "dip":58.5634,
+            "ztor":0,
+            "lats":[46.0575, 46.0127, 45.9725, 45.9051, 45.8561, 45.8381, 45.7894, 45.7675, 45.7412, 45.709],
+            "lons":[-111.1307, -111.1134, -111.0549, -111.064, -111.0186, -110.9822, -111.0308, -110.9998, -111.0054, -110.9767]
+        },
+        {
+            "id":"montana_699b_se",
+            "desc":"Mission Fault; Mission Valley segment; #699b",
+            "mag":6.9,
+            "width":18.9656,
+            "dip":57.7669,
+            "ztor":0,
+            "lats":[47.5987, 47.3137, 47.2708],
+            "lons":[-114.0367, -113.9869, -113.929]
+        },
+        {
+            "id":"montana_700_se",
+            "desc":"Swan Fault; #700",
+            "mag":7.2,
+            "width":19.5004,
+            "dip":55.2097,
+            "ztor":0,
+            "lats":[47.9255, 47.6814, 47.1818],
+            "lons":[-113.8162, -113.7492, -113.384]
+        },
+        {
+            "id":"montana_701_se",
+            "desc":"South Fork Flathead Fault, northern section; #701",
+            "mag":7.1,
+            "width":19.555,
+            "dip":54.9583,
+            "ztor":0,
+            "lats":[48.4715, 47.9271],
+            "lons":[-113.9744, -113.521]
+        },
+        {
+            "id":"montana_703_ninemile_se",
+            "desc":"Ninemile Fault; #703",
+            "mag":7.1,
+            "width":15.9998,
+            "dip":90,
+            "ztor":0,
+            "lats":[47.2455, 46.8875],
+            "lons":[-114.68, -113.9279]
+        },
+        {
+            "id":"montana_703_se",
+            "desc":"Savage Lake Fault; #703",
+            "mag":7,
+            "width":19.4305,
+            "dip":55.4893,
+            "ztor":0,
+            "lats":[48.5474, 48.4452, 48.298, 48.1358],
+            "lons":[-115.9, -115.8174, -115.8422, -115.7637]
+        },
+        {
+            "id":"montana_707_se",
+            "desc":"Brockton-Froid Fault; #707 ",
+            "mag":7.1,
+            "width":15.9997,
+            "dip":90,
+            "ztor":0,
+            "lats":[48.11, 48.466],
+            "lons":[-105.103, -104.232]
+        }
+    ]
+}
