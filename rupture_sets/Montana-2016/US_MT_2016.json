@@ -9,7 +9,7 @@
 	    "mag":6.01,
 	    "width":12.3,
 	    "dip":90,
-	    "rake":90,
+	    "rake":0,
 	    "ztor":1.0,
 	    "lats":[47.542, 47.499],
 	    "lons":[-111.435, -111.406]
@@ -17,7 +17,9 @@
         {
             "id":"helena_valley_m5.5_se",
             "desc":"Helena Valley M5.5 Scenario Aftershock",
-            "mag":5.5
+            "mag":5.5,
+            "lats":[46.74],
+	    "lons":[-111.97]
         },
         {
             "id":"helena_valley_m6.3_se",

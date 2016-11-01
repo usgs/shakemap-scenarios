@@ -107,10 +107,14 @@ def write_event_xml(input_dir, rdict, directivity):
     root.set('description', rdict['real_desc'])
     root.set('created', '')
     root.set('otime', '')
-    root.set('type', rake_to_type(event['rake']))
     root.set('network', '')
-    root.set('reference', rdict['fault'].getReference())
-    root.set('rake', str(event['rake']))
+    if rdict['fault'] is not None:
+        root.set('reference', rdict['fault'].getReference())
+    if event['rake'] is not None:
+        root.set('rake', str(event['rake']))
+        root.set('type', rake_to_type(event['rake']))
+    else:
+        root.set('type', 'ALL')
     root.set('directivity', str(directivity))
     root.set('eventsourcecode', rdict['eventsourcecode'])
 
@@ -322,39 +326,54 @@ def parse_json(rupts, args):
         short_name = event_name.split('.xls')[0]
         id = rupts['events'][i]['id']
         magnitude = rupts['events'][i]['mag']
-        dip = rupts['events'][i]['dip']
-        rake = rupts['events'][i]['rake']
-        width = rupts['events'][i]['width']
-        ztor = rupts['events'][i]['ztor']
+        if 'rake' in rupts['events'][i].keys():
+            rake = rupts['events'][i]['rake']
+        else:
+            rake = None
+        # Does the file include a fault model?
+        if len(rupts['events'][i]['lats']) > 1:
+            hasfault = True
+            dip = rupts['events'][i]['dip']
 
-        lons = rupts['events'][i]['lons']
-        lats = rupts['events'][i]['lats']
-        xp0 = np.array(lons[:-1])
-        xp1 = np.array(lons[1:])
-        yp0 = np.array(lats[:-1])
-        yp1 = np.array(lats[1:])
-        zp = np.ones_like(xp0) * ztor
-        dips = np.ones_like(xp0) * dip
-        widths = np.ones_like(xp0) * width
+            width = rupts['events'][i]['width']
+            ztor = rupts['events'][i]['ztor']
 
-        P1 = geo.point.Point(lons[0], lats[0])
-        P2 = geo.point.Point(lons[-1], lats[-1])
-        strike = np.array([P1.azimuth(P2)])
+            lons = rupts['events'][i]['lons']
+            lats = rupts['events'][i]['lats']
+            xp0 = np.array(lons[:-1])
+            xp1 = np.array(lons[1:])
+            yp0 = np.array(lats[:-1])
+            yp1 = np.array(lats[1:])
+            zp = np.ones_like(xp0) * ztor
+            dips = np.ones_like(xp0) * dip
+            widths = np.ones_like(xp0) * width
 
-        flt = Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
-                              widths, dips, strike=strike,
-                              reference=args.reference)
-        flt._segment_index = np.zeros_like(xp0)
+            P1 = geo.point.Point(lons[0], lats[0])
+            P2 = geo.point.Point(lons[-1], lats[-1])
+            strike = np.array([P1.azimuth(P2)])
 
-        quads = flt.getQuadrilaterals()
+            flt = Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
+                                  widths, dips, strike=strike,
+                                  reference=args.reference)
+            flt._segment_index = np.zeros_like(xp0)
+
+            quads = flt.getQuadrilaterals()
+            edges = get_fault_edges(quads) # for map and hypo placement
+            hlat, hlon, hdepth = get_hypo(edges, args)
+        else:
+            hasfault = False
+            flt = None
+            edges = None
+            hlat = float(rupts['events'][i]['lats'][0])
+            hlon = float(rupts['events'][i]['lons'][0])
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind,
             quads, id = id)
 
-        event = {'lat': 0,
-                 'lon': 0,
-                 'depth': 0,
+        event = {'lat': hlat,
+                 'lon': hlon,
+                 'depth': hdepth,
                  'mag': magnitude,
                  'rake':rake,
                  'id': id_str,
@@ -363,24 +382,6 @@ def parse_json(rupts, args):
                  'timezone': 'UTC'}
         event['time'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
         event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
-
-        #-----------------------------------------------------------------------
-        # For map display and hypo placement get trace of top/bottom edges and
-        # put them in order.
-        #-----------------------------------------------------------------------
-
-        edges = get_fault_edges(quads)
-
-        #-----------------------------------------------------------------------
-        # Hypocenter placement
-        #-----------------------------------------------------------------------
-
-        hlat, hlon, hdepth = get_hypo(edges, args)
-        
-
-        event['lat'] = hlat
-        event['lon'] = hlon
-        event['depth'] = hdepth
 
         rdict = {'fault':flt,
                  'event':event,
