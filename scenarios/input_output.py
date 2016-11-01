@@ -40,7 +40,10 @@ def read_event_xml(file):
         hlat = float(eq.attrib['lat'])
         hlon = float(eq.attrib['lon'])
         hdepth = float(eq.attrib['depth'])
-        rake = float(eq.attrib['rake'])
+        if 'rake' in eq.attrib.keys():
+            rake = float(eq.attrib['rake'])
+        else:
+            rake = None
         lstring = eq.attrib['locstring']
         description = eq.attrib['description']
         mech = eq.attrib['type']
