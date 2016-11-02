@@ -20,6 +20,39 @@ from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
 
 
+def find_rupture(pattern, file):
+    """
+    Convenience method for finding name and index of a rupture based on pattern
+    matching the description. 
+
+    Args:
+        pattern (str): Pattern to search for. 
+        file (str): JSON rupture file to look in. 
+
+    Return:
+        tuple: List of descriptions and list of indices. 
+
+    """
+    with open(file) as f:
+        rupts = json.load(f)
+
+    # The key for the search is different for UCERF3 than other
+    # files:
+    if rupts['name'] == '2014 NSHMP Determinisitc Event Set':
+        skey = 'name'
+    else:
+        skey = 'desc'
+
+    desc = [r[skey] for r in rupts['events'] ]
+
+    ind = np.where(list(map(lambda x: pattern in str(x), desc)))[0]
+    result = np.array(desc)[ind]
+
+    for i in range(len(ind)):
+        print('%i: %s' %(ind[i], result[i]))
+
+    return ind, result
+
 def get_hypo(edges, args):
     """
     Args:
