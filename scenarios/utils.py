@@ -299,6 +299,8 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
     """
 
     event_legal = "".join(x for x in event_name if x.isalnum())
+    if id is not None:
+        id = "".join(x for x in id if x.isalnum()).replace('.', 'p')
     mag_str = str(mag).strip("0")
     # PDL requrement: no ".", so replace with "p"
     mag_str = mag_str.replace('.', 'p')
@@ -348,18 +350,31 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
         if id is None:
             id_str = "%s_M%s_se~%s" % (event_legal[:20], mag_str, dirtag)
         else:
-            id_str = "%s_M%s_se~%s" % (id[:20], mag_str, dirtag)
+            if id[-3:] == '_se':
+                id_str = id
+            else:
+                id_str = "%s_M%s_se~%s" % (id[:20], mag_str, dirtag)
         id_str = id_str.lower()
         real_desc = ddes
     else:
         if id is None:
             id_str = "%s_M%s_se" % (event_legal[:20], mag_str)
         else:
-            id_str = "%s_M%s_se" % (id[:20], mag_str)
+            if id[-3:] == '_se':
+                id_str = id
+            else:
+                id_str = "%s_M%s_se" % (id[:20], mag_str)
         id_str = id_str.lower()
         real_desc = 'Median ground motions'
 
-    eventsourcecode = "%s_M%s_se" % (event_legal[:20], mag_str)
+    if id is None:
+        eventsourcecode = "%s_M%s_se" % (event_legal[:20], mag_str)
+    else:
+        if id[-3:] == '_se':
+            eventsourcecode = id
+        else:
+            eventsourcecode = "%s_M%s_se" % (id[:20], mag_str)
+
     eventsourcecode = eventsourcecode.lower()
     return id_str, eventsourcecode, real_desc
 

@@ -30,7 +30,7 @@ def test_charlevoix_0(tmpdir):
     jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
 
     # directory holding test and target data for this event
-    testinput = os.path.join(p, 'data/charlevoix_0_m7p_se/input')
+    testinput = os.path.join(p, 'data/charlevoix0_m7p_se/input')
     targetinput = 'tests/output/charlevoix_0_m7p_se/input'
 
     #---------------------------------------------------------------------------
@@ -53,11 +53,11 @@ def test_charlevoix_0(tmpdir):
     #       Would need to parse and to tag comaprisons. Not worth it. 
 
     target = os.path.join(targetinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
+    test = os.path.join(testinput, 'charlevoix0_m7p_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
     target = os.path.join(targetinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
+    test = os.path.join(testinput, 'charlevoix0_m7p_se-fault-for-calc.txt')
     assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
@@ -66,7 +66,7 @@ def test_charlevoix_0(tmpdir):
     datadir = os.path.join(p, 'data')
     v = 'tests/data/CharlevoixVs30.grd'
     cmd = 'mkscenariogrids -e %s -g nshmp14_scr_rlme -r 0.1 '\
-          '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
+          '-v %s -s %s' %('charlevoix0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
     # Check for errors/warnings
@@ -129,7 +129,7 @@ def test_charlevoix_0_shallow(tmpdir):
     jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
 
     # directory holding test and target data for this event
-    testinput = os.path.join(p, 'data/charlevoix_0_m7p_se/input')
+    testinput = os.path.join(p, 'data/charlevoix0_m7p_se/input')
     targetinput = 'tests/output/charlevoix_0_m7p_se/input'
 
     #---------------------------------------------------------------------------
@@ -152,11 +152,11 @@ def test_charlevoix_0_shallow(tmpdir):
     #       Would need to parse and to tag comaprisons. Not worth it. 
 
     target = os.path.join(targetinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
+    test = os.path.join(testinput, 'charlevoix0_m7p_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
     target = os.path.join(targetinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
+    test = os.path.join(testinput, 'charlevoix0_m7p_se-fault-for-calc.txt')
     assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
@@ -165,7 +165,7 @@ def test_charlevoix_0_shallow(tmpdir):
     datadir = os.path.join(p, 'data')
     v = 'tests/data/CharlevoixVs30.grd'
     cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
-          '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
+          '-v %s -s %s' %('charlevoix0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
     # Check for errors/warnings
@@ -228,7 +228,7 @@ def test_charlevoix_0_no_fault(tmpdir):
     jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
 
     # directory holding test and target data for this event
-    testinput = os.path.join(p, 'data/charlevoix_0_m7p_se/input')
+    testinput = os.path.join(p, 'data/charlevoix0_m7p_se/input')
     targetinput = 'tests/output/charlevoix_0_m7p_noflt_se/input'
 
     #---------------------------------------------------------------------------
@@ -246,8 +246,8 @@ def test_charlevoix_0_no_fault(tmpdir):
     assert se == b''
 
     # Remove fault files:
-    os.remove(os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt'))
-    os.remove(os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt'))
+    os.remove(os.path.join(testinput, 'charlevoix0_m7p_se_for-map_fault.txt'))
+    os.remove(os.path.join(testinput, 'charlevoix0_m7p_se-fault-for-calc.txt'))
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
@@ -255,7 +255,7 @@ def test_charlevoix_0_no_fault(tmpdir):
     datadir = os.path.join(p, 'data')
     v = 'tests/data/CharlevoixVs30.grd'
     cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
-          '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
+          '-v %s -s %s' %('charlevoix0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
     # Do not check standard error becasue there is a warning that
