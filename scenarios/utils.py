@@ -340,7 +340,8 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
 
     event_legal = "".join(x for x in event_name if x.isalnum())
     if id is not None:
-        id = "".join(x for x in id if x.isalnum()).replace('.', 'p')
+        id = id.replace('.', 'p')
+        id = "".join(x for x in id if x.isalnum() or x == "_")
     mag_str = str(mag).strip("0")
     # PDL requrement: no ".", so replace with "p"
     mag_str = mag_str.replace('.', 'p')
@@ -359,7 +360,7 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
     strike = geo.geodetic.azimuth(lon0[0], lat0[0], clon, clat)
     squadrant = strike_to_quadrant(strike)
 
-    if directivity:
+    if directivity: 
         dirtag = 'dir' + str(i_dir)
     else:
         dirtag = ''
