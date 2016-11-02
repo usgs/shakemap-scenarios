@@ -524,7 +524,10 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
     for eq in eventroot.iter('earthquake'):
         description = eq.attrib['description']
         directivity = eq.attrib['directivity']
-        reference = eq.attrib['reference']
+        if 'reference' in eq.attrib.keys():
+            reference = eq.attrib['reference']
+        else:
+            reference = ''
         eventsourcecode = eq.attrib['eventsourcecode']
 
     event['description'] = description
