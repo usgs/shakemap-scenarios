@@ -4,9 +4,11 @@ import time
 import json
 import argparse
 import copy
+import shutil
 
 import numpy as np
 from lxml import etree
+import xml.etree.ElementTree as ET
 
 from shapely.geometry import Polygon
 from shapely.geometry import Point
@@ -14,7 +16,12 @@ from shapely.geometry import Point
 import openquake.hazardlib.geo as geo
 from openquake.hazardlib.geo.utils import get_orthographic_projection
 
+from mapio.gmt import GMTGrid
+from impactutils.io.cmd import get_command_output
+
 import shakemap.grind.fault as fault
+from shakemap.grind.source import Source
+from shakemap.grind.source import read_event_file
 from shakemap.utils.ecef import latlon2ecef, ecef2latlon
 from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
@@ -477,3 +484,111 @@ def get_fault_edges(q, rev = None):
 
     edges = [topp, botp]
     return edges
+
+def run_one_old_shakemap(eventid, shakehome, genex = True):
+    """
+    Convenience method for running old (v 3.5) shakemap with new estimates. This
+    allows for us to generate all the products with the old code since the new 
+    code cannot do this yet, but use the new code for computing the ground 
+    motions. 
+
+    Args:
+        eventid (srt): Specifies the id of the event to process. 
+        shakehome (srt): Path to the home directory of the ShakeMap3.5 install.
+        genex (bool): Should genex be run?
+
+    Returns:
+        dictionary: Each entry is the log file for the different ShakeMap3.5 
+            calls. 
+        
+    """
+    log = {}
+    shakebin = os.path.join(shakehome, 'bin')
+    datadir = os.path.join(shakehome, 'data')
+    # Read event.xml
+    eventdir = os.path.join(datadir, eventid)
+    inputdir = os.path.join(eventdir, 'input')
+    xml_file = os.path.join(inputdir, 'event.xml')
+    # Read in event.xml
+    event = read_event_file(xml_file)
+    
+    # Read in gmpe set name
+    gmpefile = open(os.path.join(inputdir, "gmpe_set_name.txt"), "r")
+    set_name = gmpefile.read()
+    gmpefile.close()
+
+    # Add scenario-specific fields:
+    eventtree = ET.parse(xml_file)
+    eventroot = eventtree.getroot()
+    for eq in eventroot.iter('earthquake'):
+        description = eq.attrib['description']
+        directivity = eq.attrib['directivity']
+        reference = eq.attrib['reference']
+        eventsourcecode = eq.attrib['eventsourcecode']
+
+    event['description'] = description
+    event['directivity'] = directivity
+    event['reference'] = reference
+
+    source = Source(event)
+
+    grd = os.path.join(inputdir, 'pgv_estimates.grd')
+    gdict = GMTGrid.getFileGeoDict(grd)[0]
+    
+    # Tolerance is a bit hacky but necessary to prevent GMT
+    # from barfing becasue it thinks that the estimates files
+    # do not cover the desired area sampled by grind's call
+    # with grdsample. 
+    tol = gdict.dx
+    W = gdict.xmin + tol
+    E = gdict.xmax - tol
+    S = gdict.ymin + tol
+    N = gdict.ymax - tol
+
+    # Put into grind.conf (W S E N)
+    confdir = os.path.join(eventdir, 'config')
+    if os.path.isdir(confdir) == False:
+        os.mkdir(confdir)
+        
+    # need to copy default grind.conf
+    default_grind_conf = os.path.join(shakehome, 'config', 'grind.conf')
+    grind_conf = os.path.join(confdir, 'grind.conf')
+    shutil.copyfile(default_grind_conf, grind_conf)
+
+    sbstr = '     strictbound : %.9f %.9f %.9f %.9f' %(W, S, E, N)
+    with open(grind_conf, 'a') as f:
+        f.write(sbstr)
+
+    # Grind
+    callgrind = os.path.join(shakebin, 'grind') + ' -event ' + eventid
+    rc,so,se = get_command_output(callgrind)
+    log['grind'] = {'rc':rc, 'so':so, 'se':se}
+    
+    # Add GMPE set name to info.json
+    cmd = os.path.join(shakebin, 'edit_info') + ' -event ' + eventid + \
+        ' -tag gmpe_reference' + ' -value ' + set_name
+    rc,so,se = get_command_output(cmd)
+    log['edit_info'] = {'rc':rc, 'so':so, 'se':se}
+
+    # Tag
+    calltag = os.path.join(shakebin, 'tag') + \
+        ' -event ' + eventid + ' -name \"' + event['locstring'] + ' - ' + \
+        event['description'] + '\"'
+    rc,so,se = get_command_output(calltag)
+    log['tag'] = {'rc':rc, 'so':so, 'se':se}
+    
+    # Mapping
+    callmapping = os.path.join(shakebin, 'mapping') + ' -event ' + \
+        eventid + ' -timestamp -nohinges '
+    rc,so,se = get_command_output(callmapping)
+    log['mapping'] = {'rc':rc, 'so':so, 'se':se}
+    
+    # Genex
+    if genex is True:
+        callgenex = os.path.join(shakebin, 'genex') + ' -event ' + \
+            eventid + ' -metadata -zip -verbose -shape shape -shape hazus'
+        rc,so,se = get_command_output(callgenex)
+        log['genex'] = {'rc':rc, 'so':so, 'se':se}
+
+    return log
+
