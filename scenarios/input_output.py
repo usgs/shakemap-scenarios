@@ -45,15 +45,24 @@ def read_event_xml(file):
         else:
             rake = None
         lstring = eq.attrib['locstring']
-        description = eq.attrib['description']
-        mech = eq.attrib['type']
+        if 'description' in eq.attrib.keys():
+            description = eq.attrib['description']
+        else:
+            description = ""
+        if 'type' in eq.attrib.keys():
+            mech = eq.attrib['type']
+        else:
+            mech = "ALL"
         year = int(eq.attrib['year'])
         month = int(eq.attrib['month'])
         day = int(eq.attrib['day'])
         hour = int(eq.attrib['hour'])
         minute = int(eq.attrib['minute'])
         second = int(eq.attrib['second'])
-        directivity = ast.literal_eval(eq.attrib['directivity'])
+        if 'directivity' in eq.attrib.keys():
+            directivity = ast.literal_eval(eq.attrib['directivity'])
+        else:
+            directivity = False
 
     sdt = ShakeDateTime(year, month, day, hour, minute, second, int(0))
 
