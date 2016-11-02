@@ -272,6 +272,11 @@ def main(args):
     mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
     sgrid.save(os.path.join(input_dir, 'mi_sd.grd'))
 
+    # Also write GMPE set name to a file to put into info.json later
+    gmpefile = open(os.path.join(input_dir, "gmpe_set_name.txt"), "w")
+    gmpefile.write(set_name)
+    gmpefile.close()
+
 
 if __name__ == '__main__':
     desc = '''
