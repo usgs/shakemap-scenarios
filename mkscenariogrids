@@ -118,8 +118,6 @@ def main(args):
         ny = np.floor(latspan / res) + 1
         ncell = nx * ny
 
-    # buffer to increase grid so that it doesn't barf when sent to ShakeMap
-#    buf = 2 * res
 
     # Geodictionary for this ShakeMap
     tmpdict = {'xmin': lonmin, 'xmax': lonmax,
