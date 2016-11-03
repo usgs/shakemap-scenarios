@@ -63,6 +63,10 @@ def read_event_xml(file):
             directivity = ast.literal_eval(eq.attrib['directivity'])
         else:
             directivity = False
+        if 'eventsourcecode' in eq.attrib.keys():
+            eventsourcecode = eq.attrib['eventsourcecode']
+        else:
+            eventsourcecode = None
 
     sdt = ShakeDateTime(year, month, day, hour, minute, second, int(0))
 
@@ -79,6 +83,7 @@ def read_event_xml(file):
              'timezone': 'UTC',
              'directivity':directivity,
              'description':description,
+             'eventsourcecode':eventsourcecode,
              'sdt':sdt}
 
     return event
