@@ -6,7 +6,7 @@ import argparse
 
 import numpy as np
 
-from shakemap.utils.misc import get_command_output
+from impactutils.io.cmd import get_command_output
 
 
 def run_one(event, args):
@@ -18,7 +18,7 @@ def run_one(event, args):
           ' -r ' + str(args.res) + \
           ' -s ' + args.shakehome
     rc, so, se = get_command_output(cmd)
-    if not rc:
+    if rc is False:
         raise Exception(se)
 
 
@@ -62,15 +62,16 @@ if __name__ == '__main__':
         '-n', '--nproc', help='Number of processors.', type=int)
     parser.add_argument('-v', '--vs30',
                         help='Specifies the path to the Vs30 grid to use.')
-    parser.add_argument('-g', '--gmpe', default='NSHMP14acr',
-                        help='Select GMPE(s).',
-                        choices=['NSHMP14acr', 'NSHMP14scr_rlme', 'NSHMP14scr_grd',
-                                 'NSHMPsub_i', 'NSHMPsub_s',
-                                 'ASK14', 'BSSA14', 'CB14', 'CY14',
-                                 'F96', 'T02', 'S02', 'C03', 'TP05', 'AB06p', 'P11', 'A08p', 'S01',
-                                 'AB03ig', 'Z06i', 'BCH15i',
-                                 'AB03sg', 'AB03sc', 'Z06s', 'BCH15s'])
-    parser.add_argument('-r', '--res', default=30 / 60 / 60, type=float,
+    parser.add_argument(
+        '-g', '--gmpe', default='nshmp14_shallow',
+        help='Select GMPE(s). Note that nshmp14_shalllow automatically selects '\
+             'between nshmp14_acr, nshmp14_scr_rlme, and nshmp14_scr_grd, but '\
+             'this currently only works in US.',
+        choices=[
+            'nshmp14_shallow', 
+            'nshmp14_acr', 'nshmp14_scr_rlme', 'nshmp14_scr_grd',
+            'nshmp14_sub_i', 'nshmp14_sub_s'])
+    parser.add_argument('-r', '--res', default=30/60/60, type=float,
                         help='The resolution in decimal degrees; default is 30/60/60.')
     parser.add_argument('-m', '--max', default=500000, type=int,
                         help='Maximum number of cells allowed; '
