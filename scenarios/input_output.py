@@ -10,13 +10,13 @@ from lxml import etree
 
 import openquake.hazardlib.geo as geo
 
-from shakemap.grind.fault import Fault
+from shakemap.grind.rupture import QuadRupture
 from shakemap.utils.ecef import latlon2ecef, ecef2latlon
 from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
 
 from scenarios.utils import get_event_id
-from scenarios.utils import get_fault_edges
+from scenarios.utils import get_rupture_edges
 from scenarios.utils import get_hypo
 from scenarios.utils import rake_to_type
 
@@ -125,8 +125,8 @@ def write_event_xml(input_dir, rdict, directivity):
     root.set('created', '')
     root.set('otime', '')
     root.set('network', '')
-    if rdict['fault'] is not None:
-        root.set('reference', rdict['fault'].getReference())
+    if rdict['rupture'] is not None:
+        root.set('reference', rdict['rupture'].getReference())
     if event['rake'] is not None:
         root.set('rake', str(event['rake']))
         root.set('type', rake_to_type(event['rake']))
@@ -140,10 +140,10 @@ def write_event_xml(input_dir, rdict, directivity):
              encoding="us-ascii")
 
 
-def write_fault_files(input_dir, rdict):
+def write_rupture_files(input_dir, rdict):
     """
-    Write fault files for scenarios. This includes one for distance
-    calculations, which is the full representation of the fault, and
+    Write rupture files for scenarios. This includes one for distance
+    calculations, which is the full representation of the rupture, and
     also a simplified version for plotting on a map that is just the
     trace of the top and bottom edges. 
 
@@ -152,8 +152,8 @@ def write_fault_files(input_dir, rdict):
         rdict (dict): Rupture dictionary.
 
     """
-    fault = rdict['fault']
-    fault.writeFaultFile(os.path.join(
+    rupture = rdict['rupture']
+    rupture.writeTextFile(os.path.join(
         input_dir, rdict['id_str'] + '-fault-for-calc.txt'))
 
     ff = open(os.path.join(
@@ -260,12 +260,13 @@ def parse_bssc2014_ucerf(rupts, args):
             new_seg_ind.extend([secind] * n_sec_trace)
             secind = secind + 1
 
-        flt = Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
-                              width_sec, dip_sec, strike=strike_sec,
-                              reference=args.reference)
-        flt._segment_index = new_seg_ind
+        rupt = QuadRupture.fromTrace(
+            xp0, yp0, xp1, yp1, zp,
+            width_sec, dip_sec, strike=strike_sec,
+            reference=args.reference)
+        rupt._segment_index = new_seg_ind
 
-        quads = flt.getQuadrilaterals()
+        quads = rupt.getQuadrilaterals()
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind, quads)
@@ -287,7 +288,7 @@ def parse_bssc2014_ucerf(rupts, args):
         # put them in order.
         #-----------------------------------------------------------------------
 
-        edges = get_fault_edges(quads, rev)
+        edges = get_rupture_edges(quads, rev)
 
         #-----------------------------------------------------------------------
         # Hypocenter placement
@@ -299,7 +300,7 @@ def parse_bssc2014_ucerf(rupts, args):
         event['lon'] = hlon
         event['depth'] = hdepth
 
-        rdict = {'fault':flt,
+        rdict = {'rupture':rupt,
                  'event':event,
                  'edges':edges,
                  'id_str':id_str,
@@ -347,9 +348,9 @@ def parse_json(rupts, args):
             rake = rupts['events'][i]['rake']
         else:
             rake = None
-        # Does the file include a fault model?
+        # Does the file include a rupture model?
         if len(rupts['events'][i]['lats']) > 1:
-            hasfault = True
+            hasrupture = True
             dip = rupts['events'][i]['dip']
 
             width = rupts['events'][i]['width']
@@ -369,17 +370,18 @@ def parse_json(rupts, args):
             P2 = geo.point.Point(lons[-1], lats[-1])
             strike = np.array([P1.azimuth(P2)])
 
-            flt = Fault.fromTrace(xp0, yp0, xp1, yp1, zp,
-                                  widths, dips, strike=strike,
-                                  reference=args.reference)
-            flt._segment_index = np.zeros_like(xp0)
+            rupt = QuadRupture.fromTrace(
+                xp0, yp0, xp1, yp1, zp,
+                widths, dips, strike=strike,
+                reference=args.reference)
+            rupt._segment_index = np.zeros_like(xp0)
 
-            quads = flt.getQuadrilaterals()
-            edges = get_fault_edges(quads) # for map and hypo placement
+            quads = rupt.getQuadrilaterals()
+            edges = get_rupture_edges(quads) # for map and hypo placement
             hlat, hlon, hdepth = get_hypo(edges, args)
         else:
-            hasfault = False
-            flt = None
+            hasrupture = False
+            rupt = None
             edges = None
             hlat = float(rupts['events'][i]['lats'][0])
             hlon = float(rupts['events'][i]['lons'][0])
@@ -400,7 +402,89 @@ def parse_json(rupts, args):
         event['time'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
         event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
 
-        rdict = {'fault':flt,
+        rdict = {'rupture':rupt,
+                 'event':event,
+                 'edges':edges,
+                 'id_str':id_str,
+                 'short_name':short_name,
+                 'real_desc':real_desc,
+                 'eventsourcecode':eventsourcecode
+                }
+        rlist.append(rdict)
+
+    return rlist
+
+def parse_json_sub(rupts, args):
+    """
+    This is an alternative version of parse_json to use with the Cascadia
+    subduction zone JSON rupture file. 
+
+    Args:
+        rupts (dict): Python translation of rupture json file using json.load 
+            method.
+        args (ArgumentParser): argparse object. 
+
+    Returns:
+        dict: Dictionary of rupture information.
+
+    """
+    rlist = []
+    nrup = len(rupts['events'])
+
+    if args.index:
+        iter = args.index
+        iter = map(int, iter)
+    else:
+        iter = range(nrup)
+
+    for i in iter:
+        event_name = rupts['events'][i]['desc']
+        short_name = event_name.split('.xls')[0]
+        id = rupts['events'][i]['id']
+        magnitude = rupts['events'][i]['mag']
+        if 'rake' in rupts['events'][i].keys():
+            rake = rupts['events'][i]['rake']
+        else:
+            rake = None
+
+        toplons = np.array(rupts['events'][i]['toplons'])
+        toplats = np.array(rupts['events'][i]['toplats'])
+        topdeps = np.array(rupts['events'][i]['topdeps'])
+        botlons = np.array(rupts['events'][i]['botlons'])
+        botlats = np.array(rupts['events'][i]['botlats'])
+        botdeps = np.array(rupts['events'][i]['botdeps'])
+
+        lats = np.append(toplats, botlats[::-1])
+        lons = np.append(toplons, botlons[::-1])
+        deps = np.append(topdeps, botdeps[::-1])
+
+        rupt = QuadRupture(lon = lons,
+                          lat = lats,
+                          depth = deps,
+                          reference=args.reference)
+        rupt._segment_index = np.zeros_like(xp0)
+
+        quads = rupt.getQuadrilaterals()
+        edges = get_rupture_edges(quads) # for map and hypo placement
+        hlat, hlon, hdepth = get_hypo(edges, args)
+
+        id_str, eventsourcecode, real_desc = get_event_id(
+            event_name, magnitude, args.directivity, args.dirind,
+            quads, id = id)
+
+        event = {'lat': hlat,
+                 'lon': hlon,
+                 'depth': hdepth,
+                 'mag': magnitude,
+                 'rake':rake,
+                 'id': id_str,
+                 'locstring': event_name,
+                 'type': 'U',  # overwrite later
+                 'timezone': 'UTC'}
+        event['time'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
+        event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
+
+        rdict = {'rupture':rupt,
                  'event':event,
                  'edges':edges,
                  'id_str':id_str,

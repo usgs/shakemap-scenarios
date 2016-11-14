@@ -19,7 +19,7 @@ from openquake.hazardlib.geo.utils import get_orthographic_projection
 from mapio.gmt import GMTGrid
 from impactutils.io.cmd import get_command_output
 
-import shakemap.grind.fault as fault
+import shakemap.grind.rupture as rupture
 from shakemap.grind.source import Source
 from shakemap.grind.source import read_event_file
 from shakemap.utils.ecef import latlon2ecef, ecef2latlon
@@ -149,7 +149,7 @@ def get_extent(source):
     """
     Method to compute map extent from source.
 
-    Note: currently written assuming source has a fault
+    Note: currently written assuming source has a rupture
 
     Args:
         source (Source): A Source instance. 
@@ -158,13 +158,13 @@ def get_extent(source):
         tuple: lonmin, lonmax, latmin, latmax.
 
     """
-    # Get arrays of lats/lons for fault verticies
-    flt = source.getFault()
+    # Get arrays of lats/lons for rupture verticies
+    rupt = source.getRupture()
 
-    # Is there a fault?
-    if flt is not None:
-        lats = flt.getLats()
-        lons = flt.getLons()
+    # Is there a rupture?
+    if rupt is not None:
+        lats = rupt.getLats()
+        lons = rupt.getLons()
 
         # Remove nans
         lons = lons[~np.isnan(lons)]
@@ -201,15 +201,15 @@ def get_extent(source):
 
     # Projection
     proj = get_orthographic_projection(clon - 4, clon + 4, clat + 4, clat - 4)
-    if flt is not None:
-        fltx, flty = proj(lons, lats)
+    if rupt is not None:
+        ruptx, rupty = proj(lons, lats)
     else:
-        fltx, flty = proj(clon, clat)
+        ruptx, rupty = proj(clon, clat)
 
-    xmin = np.nanmin(fltx) - mindist_km
-    ymin = np.nanmin(flty) - mindist_km
-    xmax = np.nanmax(fltx) + mindist_km
-    ymax = np.nanmax(flty) + mindist_km
+    xmin = np.nanmin(ruptx) - mindist_km
+    ymin = np.nanmin(rupty) - mindist_km
+    xmax = np.nanmax(ruptx) + mindist_km
+    ymax = np.nanmax(rupty) + mindist_km
 
     # Put a limit on range of aspect ratio
     dx = xmax - xmin
@@ -419,10 +419,10 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
     eventsourcecode = eventsourcecode.lower()
     return id_str, eventsourcecode, real_desc
 
-def get_fault_edges(q, rev = None):
+def get_rupture_edges(q, rev = None):
     """
-    Return a list of the top and bottom edges of the fault. This is
-    useful as a simplified visual representation of the fault and placing
+    Return a list of the top and bottom edges of the rupture. This is
+    useful as a simplified visual representation of the rupture and placing
     the hypocenter but not used for distance calculaitons. 
 
     Args:
