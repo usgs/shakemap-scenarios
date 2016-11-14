@@ -1,7 +1,5 @@
 import os
 import time
-import json
-import argparse
 import xml.etree.ElementTree as ET
 import ast
 
@@ -11,8 +9,6 @@ from lxml import etree
 import openquake.hazardlib.geo as geo
 
 from shakemap.grind.rupture import QuadRupture
-from shakemap.utils.ecef import latlon2ecef, ecef2latlon
-from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
 
 from scenarios.utils import get_event_id
@@ -208,9 +204,7 @@ def parse_bssc2014_ucerf(rupts, args):
         short_name = event_name.split('EllB')[0].split(
             'Shaw09')[0].split('2011')[0].split('HB08')[0].rstrip()
         magnitude = rupts['events'][i]['magnitude']
-        dip = rupts['events'][i]['dip']
         rake = rupts['events'][i]['rake']
-        width = rupts['events'][i]['width']
 
         sections = np.array(rupts['events'][i]['sections'])
         nsections = len(sections)
@@ -348,9 +342,10 @@ def parse_json(rupts, args):
             rake = rupts['events'][i]['rake']
         else:
             rake = None
+
         # Does the file include a rupture model?
         if len(rupts['events'][i]['lats']) > 1:
-            hasrupture = True
+
             dip = rupts['events'][i]['dip']
 
             width = rupts['events'][i]['width']
@@ -380,7 +375,6 @@ def parse_json(rupts, args):
             edges = get_rupture_edges(quads) # for map and hypo placement
             hlat, hlon, hdepth = get_hypo(edges, args)
         else:
-            hasrupture = False
             rupt = None
             edges = None
             hlat = float(rupts['events'][i]['lats'][0])
