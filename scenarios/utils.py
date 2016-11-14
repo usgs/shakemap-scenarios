@@ -148,7 +148,7 @@ def get_extent(source):
     """
     Method to compute map extent from source.
 
-    Note: currently written assuming source has a rupture
+    Note: currently written assuming source has a rupture.
 
     Args:
         source (Source): A Source instance. 

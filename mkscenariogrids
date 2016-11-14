@@ -14,7 +14,7 @@ from mapio.geodict import GeoDict
 from mapio.gmt import GMTGrid
 
 # Shakemap imports
-import shakemap.grind.rupture as rupture
+from shakemap.grind.rupture import QuadRupture
 from shakemap.grind.source import Source
 from shakemap.grind.distance import Distance
 from shakemap.grind.sites import Sites
@@ -57,9 +57,9 @@ def main(args):
     if rc is True:
         # There is a rupture
         ruptfile = so.decode('utf-8').strip()
-        flt = rupture.QuadRupture.readTextFile(ruptfile)
+        rupt = QuadRupture.readTextFile(ruptfile)
     else:
-        flt = None
+        rupt = None
 
     #---------------------------------------------------------------------------
     # Get DualDistanceWeights instance
@@ -72,7 +72,7 @@ def main(args):
 
         if stable is True:
             # if SCR check for rupture
-            if flt is None:
+            if rupt is None:
                 set_name = 'nshmp14_scr_grd'
             else:
                 set_name = 'nshmp14_scr_rlme'
@@ -89,7 +89,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Make source instance and compute extent
     #---------------------------------------------------------------------------
-    source = Source(event, flt)
+    source = Source(event, rupt)
 
     lonmin, lonmax, latmin, latmax = get_extent(source)
 

@@ -254,10 +254,10 @@ def parse_bssc2014_ucerf(rupts, args):
             new_seg_ind.extend([secind] * n_sec_trace)
             secind = secind + 1
 
-        rupt = QuadRupture.fromTrace(
-            xp0, yp0, xp1, yp1, zp,
-            width_sec, dip_sec, strike=strike_sec,
-            reference=args.reference)
+        rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
+                                     width_sec, dip_sec, strike=strike_sec,
+                                     reference=args.reference)
+
         rupt._segment_index = new_seg_ind
 
         quads = rupt.getQuadrilaterals()
@@ -364,11 +364,11 @@ def parse_json(rupts, args):
             P1 = geo.point.Point(lons[0], lats[0])
             P2 = geo.point.Point(lons[-1], lats[-1])
             strike = np.array([P1.azimuth(P2)])
+            
+            rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
+                                         widths, dips, strike=strike,
+                                         reference=args.reference)
 
-            rupt = QuadRupture.fromTrace(
-                xp0, yp0, xp1, yp1, zp,
-                widths, dips, strike=strike,
-                reference=args.reference)
             rupt._segment_index = np.zeros_like(xp0)
 
             quads = rupt.getQuadrilaterals()

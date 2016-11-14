@@ -1,18 +1,11 @@
 # stdlib imports
 import os
 import sys
-import io
 import filecmp
 
 # third party
-import numpy as np
 import pytest
 import tempfile
-
-from shakemap.grind.rupture import QuadRupture
-from shakemap.utils.exception import ShakeMapException
-from shakemap.grind.rupture import get_local_unit_slip_vector
-from shakemap.grind.rupture import get_quad_slip
 
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
