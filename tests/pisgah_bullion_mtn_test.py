@@ -9,10 +9,10 @@ import numpy as np
 import pytest
 import tempfile
 
-from shakemap.grind.fault import Fault
+from shakemap.grind.rupture import QuadRupture
 from shakemap.utils.exception import ShakeMapException
-from shakemap.grind.fault import get_local_unit_slip_vector
-from shakemap.grind.fault import get_quad_slip
+from shakemap.grind.rupture import get_local_unit_slip_vector
+from shakemap.grind.rupture import get_quad_slip
 
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
@@ -23,7 +23,7 @@ sys.path.insert(0, shakedir)
 
 
 def test_pisgah_bullion_mtn(tmpdir):
-    # a segment of this fault causes a division by zero error that
+    # a segment of this rupture causes a division by zero error that
     # we trap for and are testing here.
 
     # make a temporary directory; read in rupture file

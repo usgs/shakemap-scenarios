@@ -8,7 +8,7 @@ from lxml import etree
 
 from scenarios.input_output import parse_bssc2014_ucerf
 from scenarios.input_output import parse_json
-from scenarios.input_output import write_fault_files
+from scenarios.input_output import write_rupture_files
 from scenarios.input_output import write_event_xml
 
 
@@ -31,7 +31,7 @@ def main(args):
          (rupts['name'] == '2014 NSHMP Determinisitc Event Set CEUS'):
         rlist = parse_json(rupts, args)
     elif rupts['name'] == '2014 NSHMP Determinisitc Event Set Cascadia':
-        pass
+        rlist = parse_json_sub(rupts, args)
     elif rupts['name'] == '2016 Montanta Scenarios':
         rlist = parse_json(rupts, args)
     else:
@@ -66,10 +66,10 @@ def main(args):
             os.mkdir(input_dir)
 
         #-----------------------------------------------------------------------
-        # Write fault files and event.xml
+        # Write rupture files and event.xml
         #-----------------------------------------------------------------------
-        if rdict['fault'] is not None:
-            write_fault_files(input_dir, rdict)
+        if rdict['rupture'] is not None:
+            write_rupture_files(input_dir, rdict)
         
         write_event_xml(input_dir, rdict, args.directivity)
 

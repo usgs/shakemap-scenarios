@@ -14,7 +14,7 @@ from mapio.geodict import GeoDict
 from mapio.gmt import GMTGrid
 
 # Shakemap imports
-import shakemap.grind.fault as fault
+import shakemap.grind.rupture as rupture
 from shakemap.grind.source import Source
 from shakemap.grind.distance import Distance
 from shakemap.grind.sites import Sites
@@ -55,9 +55,9 @@ def main(args):
     rc, so, se = get_command_output(cmd)
 
     if rc is True:
-        # There is a fault
+        # There is a rupture
         ruptfile = so.decode('utf-8').strip()
-        flt = fault.Fault.readFaultFile(ruptfile)
+        flt = rupture.QuadRupture.readRuptureFile(ruptfile)
     else:
         flt = None
 
@@ -71,7 +71,7 @@ def main(args):
         stable = is_stable(event['lon'], event['lat'])
 
         if stable is True:
-            # if SCR check for fault
+            # if SCR check for rupture
             if flt is None:
                 set_name = 'nshmp14_scr_grd'
             else:
@@ -281,7 +281,7 @@ def main(args):
 if __name__ == '__main__':
     desc = '''
     Create the ShakeMap *_estimates.grd and *_sd.grd files. Requires an input 
-    directory with event.xml and fault files; the inputs should be created by
+    directory with event.xml and rupture files; the inputs should be created by
     the 'mkinputdir' script or similar. 
 
     Currently any GMPE set besides NSHMP14acr (or any combination of its 

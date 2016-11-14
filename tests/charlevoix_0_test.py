@@ -9,10 +9,10 @@ import numpy as np
 import pytest
 import tempfile
 
-from shakemap.grind.fault import Fault
+from shakemap.grind.rupture import QuadRupture
 from shakemap.utils.exception import ShakeMapException
-from shakemap.grind.fault import get_local_unit_slip_vector
-from shakemap.grind.fault import get_quad_slip
+from shakemap.grind.rupture import get_local_unit_slip_vector
+from shakemap.grind.rupture import get_quad_slip
 
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
@@ -220,7 +220,7 @@ def test_charlevoix_0_shallow(tmpdir):
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
 
-def test_charlevoix_0_no_fault(tmpdir):
+def test_charlevoix_0_no_rupture(tmpdir):
     # make a temporary directory; read in rupture file
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
@@ -245,7 +245,7 @@ def test_charlevoix_0_no_fault(tmpdir):
     # Check for errors/warnings
     assert se == b''
 
-    # Remove fault files:
+    # Remove rupture files:
     os.remove(os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt'))
     os.remove(os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt'))
 
@@ -315,5 +315,5 @@ if __name__ == "__main__":
     td = tempfile.TemporaryDirectory()
     test_charlevoix_0(td.name)
     test_charlevoix_0_shallow(td.name)
-    test_charlevoix_0_no_fault(td.name)
+    test_charlevoix_0_no_rupture(td.name)
 
