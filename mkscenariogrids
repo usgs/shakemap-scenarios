@@ -57,7 +57,7 @@ def main(args):
     if rc is True:
         # There is a rupture
         ruptfile = so.decode('utf-8').strip()
-        flt = rupture.QuadRupture.readRuptureFile(ruptfile)
+        flt = rupture.QuadRupture.readTextFile(ruptfile)
     else:
         flt = None
 

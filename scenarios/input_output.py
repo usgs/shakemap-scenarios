@@ -153,7 +153,7 @@ def write_rupture_files(input_dir, rdict):
 
     """
     rupture = rdict['rupture']
-    rupture.writeRuptureFile(os.path.join(
+    rupture.writeTextFile(os.path.join(
         input_dir, rdict['id_str'] + '-fault-for-calc.txt'))
 
     ff = open(os.path.join(
