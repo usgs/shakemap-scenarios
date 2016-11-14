@@ -19,7 +19,6 @@ from openquake.hazardlib.geo.utils import get_orthographic_projection
 from mapio.gmt import GMTGrid
 from impactutils.io.cmd import get_command_output
 
-import shakemap.grind.rupture as rupture
 from shakemap.grind.source import Source
 from shakemap.grind.source import read_event_file
 from shakemap.utils.ecef import latlon2ecef, ecef2latlon
@@ -84,11 +83,11 @@ def get_hypo(edges, args):
         # first unilateral
         dxp = 0.05 # strike
         dyp = 0.6 # dip
-    elif args.dirind == 0:
+    elif args.dirind == 2:
         # second unilateral
         dxp = 0.95 # strike
         dyp = 0.6 # dip
-    elif args.dirind == 0:
+    elif args.dirind == 1:
         # bilateral
         dxp = 0.5 # strike
         dyp = 0.6 # dip
@@ -149,7 +148,7 @@ def get_extent(source):
     """
     Method to compute map extent from source.
 
-    Note: currently written assuming source has a rupture
+    Note: currently written assuming source has a rupture.
 
     Args:
         source (Source): A Source instance. 
