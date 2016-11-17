@@ -135,7 +135,7 @@ def get_hypo(edges, args):
 
     # How far from pp0 to pp1, and pp2 to pp3?
     dxt = (dxp - topdist[tix0])/(topdist[tix1] - topdist[tix0])
-    dxb = (dxp - botdist[tix0])/(botdist[tix1] - botdist[tix0])
+    dxb = (dxp - botdist[bix0])/(botdist[bix1] - botdist[bix0])
 
     mp0 = pp0 + (pp1 - pp0) * dxt
     mp1 = pp3 + (pp2 - pp3) * dxb

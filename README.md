@@ -1,9 +1,5 @@
 # shakemap-scenarios
 
-[![Build Status](https://travis-ci.org/usgs/shakemap-scenarios.svg?branch=master)](https://travis-ci.org/usgs/shakemap-scenarios)
-
-[![codecov](https://codecov.io/gh/usgs/shakemap-scenarios/branch/master/graph/badge.svg)](https://codecov.io/gh/usgs/shakemap-scenarios)
-
 **Disclaimer:**
 
 >This software is preliminary or provisional and is subject to revision. It is 
