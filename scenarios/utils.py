@@ -19,11 +19,13 @@ from openquake.hazardlib.geo.utils import get_orthographic_projection
 from mapio.gmt import GMTGrid
 from impactutils.io.cmd import get_command_output
 
-from shakemap.grind.source import Source
-from shakemap.grind.source import read_event_file
+from shakemap.grind.origin import Origin
+from shakemap.grind.origin import read_event_file
 from shakemap.utils.ecef import latlon2ecef, ecef2latlon
 from shakemap.utils.vector import Vector
 from shakemap.utils.timeutils import ShakeDateTime
+from shakemap.grind.rupture import EdgeRupture
+from shakemap.grind.rupture import QuadRupture
 
 
 def find_rupture(pattern, file):
@@ -144,26 +146,23 @@ def get_hypo(edges, args):
 
     return hlat, hlon, hdepth
 
-def get_extent(source):
+def get_extent(origin, rupture=None):
     """
-    Method to compute map extent from source.
-
-    Note: currently written assuming source has a rupture.
+    Method to compute map extent from rupture.
 
     Args:
-        source (Source): A Source instance. 
+        origin (Origin): A ShakeMap Origin instance. 
+        rupture (Rupture): A ShakeMap Rupture instance (optional). 
 
     Returns:
         tuple: lonmin, lonmax, latmin, latmax.
 
     """
-    # Get arrays of lats/lons for rupture verticies
-    rupt = source.getRupture()
 
     # Is there a rupture?
-    if rupt is not None:
-        lats = rupt.getLats()
-        lons = rupt.getLons()
+    if isinstance(rupture, (QuadRupture, EdgeRupture)):
+        lats = rupture.getLats()
+        lons = rupture.getLons()
 
         # Remove nans
         lons = lons[~np.isnan(lons)]
@@ -172,14 +171,14 @@ def get_extent(source):
         clat = 0.5 * (np.nanmax(lats) + np.nanmin(lats))
         clon = 0.5 * (np.nanmax(lons) + np.nanmin(lons))
     else:
-        clat = source.getEventParam('lat')
-        clon = source.getEventParam('lon')
+        clat = origin.lat
+        clon = origin.lon
 
-    mag = source.getEventParam('mag')
+    mag = origin.mag
 
     # Is this a stable or active tectonic event?
-    # (this could be made an attribute of the ShakeMap Source class)
-    hypo = source.getHypo()
+    # (this could be made an attribute of the ShakeMap Origin class)
+    hypo = origin.getHypo()
     stable = is_stable(hypo.longitude, hypo.latitude)
 
     if stable is False:
@@ -200,7 +199,7 @@ def get_extent(source):
 
     # Projection
     proj = get_orthographic_projection(clon - 4, clon + 4, clat + 4, clat - 4)
-    if rupt is not None:
+    if isinstance(rupture, (QuadRupture, EdgeRupture)):
         ruptx, rupty = proj(lons, lats)
     else:
         ruptx, rupty = proj(clon, clat)
@@ -563,7 +562,7 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
         f.write(sbstr)
 
     # Grind
-    callgrind = os.path.join(shakebin, 'grind') + ' -event ' + eventid
+    callgrind = os.path.join(shakebin, 'grind') + ' -event ' + eventid + ' -psa'
     rc,so,se = get_command_output(callgrind)
     log['grind'] = {'rc':rc, 'so':so, 'se':se}
     

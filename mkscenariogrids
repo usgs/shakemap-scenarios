@@ -15,7 +15,9 @@ from mapio.gmt import GMTGrid
 
 # Shakemap imports
 from shakemap.grind.rupture import QuadRupture
-from shakemap.grind.source import Source
+from shakemap.grind.rupture import PointRupture
+from shakemap.grind.rupture import read_rupture_file
+from shakemap.grind.origin import Origin
 from shakemap.grind.distance import Distance
 from shakemap.grind.sites import Sites
 from shakemap.grind.multigmpe import DualDistanceWeights
@@ -57,9 +59,9 @@ def main(args):
     if rc is True:
         # There is a rupture
         ruptfile = so.decode('utf-8').strip()
-        rupt = QuadRupture.readTextFile(ruptfile)
+        rupt = read_rupture_file(ruptfile)
     else:
-        rupt = None
+        rupt = PointRupture()
 
     #---------------------------------------------------------------------------
     # Get DualDistanceWeights instance
@@ -87,11 +89,11 @@ def main(args):
     #       are always a subset of small distance sets. 
 
     #---------------------------------------------------------------------------
-    # Make source instance and compute extent
+    # Make origin instance and compute extent
     #---------------------------------------------------------------------------
-    source = Source(event, rupt)
+    origin = Origin(event)
 
-    lonmin, lonmax, latmin, latmax = get_extent(source)
+    lonmin, lonmax, latmin, latmax = get_extent(origin, rupt)
 
     # Adjust extent to be divisible by resolution
     res = args.res
@@ -129,7 +131,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Make rupture context
     #---------------------------------------------------------------------------
-    rupt = source.getRuptureContext(gmpes)
+    rx = rupt.getRuptureContext(gmpes, origin)
 
     #---------------------------------------------------------------------------
     # Vs30 stuff
@@ -171,7 +173,7 @@ def main(args):
     dep = np.zeros_like(lon)
 
     # Compute distances and site parameters on mesh.
-    dist = Distance(gmpes, source, lat, lon, dep)
+    dist = Distance(gmpes, origin, rupt, lat, lon, dep)
     dx = dist.getDistanceContext()
 
     #---------------------------------------------------------------------------
@@ -198,7 +200,7 @@ def main(args):
     #---------------------------------------------------------------------------
     if event['directivity'] is True:
         R13 = Rowshandel2013.fromSites(
-            source, sites, dx=1.0, T=[1.0, 3.0],
+            origin, sites, dx=1.0, T=[1.0, 3.0],
             a_weight=0.5, mtype=1)
         fd1 = R13.getFd()[0]
         fd3 = R13.getFd()[1]
@@ -212,7 +214,7 @@ def main(args):
         # Get DualDistanceWeights instance for this imt
         ddw = DualDistanceWeights.from_set_name(set_name, iimt)
         lnmu, lnsd = ddw.get_mean_and_stddevs(
-                sx, rupt, dx, iimt, stddev_types)
+                sx, rx, dx, iimt, stddev_types)
 
         #-----------------------------------------------------------------------
         # Handle directivity factors
@@ -265,7 +267,7 @@ def main(args):
     #---------------------------------------------------------------------------
     gmice = WGRW12()
     vipe = VirtualIPE.fromFuncs(ddw.mgmpe_small, gmice)
-    mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rupt, dx, imt.MMI(), stddev_types)
+    mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types)
 
     mgrid = GMTGrid(mmi, smdict)
     sgrid = GMTGrid(mmi_sd[0], smdict)
