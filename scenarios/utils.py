@@ -532,7 +532,7 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
     event['directivity'] = directivity
     event['reference'] = reference
 
-    source = Source(event)
+    origin = Origin(event)
 
     grd = os.path.join(inputdir, 'pgv_estimates.grd')
     gdict = GMTGrid.getFileGeoDict(grd)[0]
