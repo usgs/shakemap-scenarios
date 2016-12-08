@@ -9,6 +9,7 @@ from lxml import etree
 import openquake.hazardlib.geo as geo
 
 from shakemap.grind.rupture import QuadRupture
+from shakemap.grind.origin import Origin
 from shakemap.utils.timeutils import ShakeDateTime
 
 from scenarios.utils import get_event_id
@@ -254,45 +255,40 @@ def parse_bssc2014_ucerf(rupts, args):
             new_seg_ind.extend([secind] * n_sec_trace)
             secind = secind + 1
 
+        # Origin
+        origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
         rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
-                                     width_sec, dip_sec, strike=strike_sec,
+                                     width_sec, dip_sec, origin, strike=strike_sec,
                                      reference=args.reference)
 
         rupt._segment_index = new_seg_ind
 
         quads = rupt.getQuadrilaterals()
+        edges = get_rupture_edges(quads, rev)
+        hlat, hlon, hdepth = get_hypo(edges, args)
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind, quads)
 
-        event = {'lat': 0,
-                 'lon': 0,
-                 'depth': 0,
+        event = {'lat': hlat,
+                 'lon': hlon,
+                 'depth': hdepth,
                  'mag': magnitude,
                  'rake':rake,
                  'id': id_str,
                  'locstring': event_name,
-                 'type': 'U',  # overwrite later
-                 'timezone': 'UTC'}
-        event['time'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
-        event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 'type': 'ALL',
+                 'timezone': 'UTC',
+                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
+                     }
 
-        #-----------------------------------------------------------------------
-        # For map display and hypo placement get trace of top/bottom edges and
-        # put them in order.
-        #-----------------------------------------------------------------------
+        # Update rupture with new origin info
+        origin = Origin(event)
+        rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
+                                     width_sec, dip_sec, origin, strike=strike_sec,
+                                     reference=args.reference)
 
-        edges = get_rupture_edges(quads, rev)
-
-        #-----------------------------------------------------------------------
-        # Hypocenter placement
-        #-----------------------------------------------------------------------
-
-        hlat, hlon, hdepth = get_hypo(edges, args)
-
-        event['lat'] = hlat
-        event['lon'] = hlon
-        event['depth'] = hdepth
 
         rdict = {'rupture':rupt,
                  'event':event,
@@ -364,12 +360,14 @@ def parse_json(rupts, args):
             P1 = geo.point.Point(lons[0], lats[0])
             P2 = geo.point.Point(lons[-1], lats[-1])
             strike = np.array([P1.azimuth(P2)])
-            
+
+            # Dummy origin
+            origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
             rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
-                                         widths, dips, strike=strike,
+                                         widths, dips, origin, strike=strike,
                                          reference=args.reference)
 
-            rupt._segment_index = np.zeros_like(xp0)
+
 
             quads = rupt.getQuadrilaterals()
             edges = get_rupture_edges(quads) # for map and hypo placement
@@ -391,10 +389,18 @@ def parse_json(rupts, args):
                  'rake':rake,
                  'id': id_str,
                  'locstring': event_name,
-                 'type': 'U',  # overwrite later
-                 'timezone': 'UTC'}
-        event['time'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
-        event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 'type': 'ALL',
+                 'timezone': 'UTC',
+                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
+                     }
+
+        # Update rupture with new origin info
+        if rupt is not None:
+            origin = Origin(event)
+            rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
+                                         widths, dips, origin, strike=strike,
+                                         reference=args.reference)
 
         rdict = {'rupture':rupt,
                  'event':event,

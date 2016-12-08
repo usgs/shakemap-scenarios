@@ -244,7 +244,6 @@ def test_charlevoix_0_no_rupture(tmpdir):
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
-    #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = 'tests/data/CharlevoixVs30.grd'
     cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
