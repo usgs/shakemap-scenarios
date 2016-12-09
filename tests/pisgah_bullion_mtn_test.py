@@ -40,20 +40,14 @@ def test_pisgah_bullion_mtn(tmpdir):
         print(so.decode())
         print(se.decode())
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
 
-    # Note: Not checking event.xml because the timestamp breaks cmp comparison.
-    #       Would need to parse and to tag comaprisons. Not worth it. 
+    # Note: Not checking event.xml and rupture.json because the timestamp breaks
+    #        cmp comparison. Would need to parse and to tag comaprisons. 
 
     target = os.path.join(targetinput, 'pisgahbullionmtnmesq_m7p27_se_for-map_fault.txt')
     test = os.path.join(testinput, 'pisgahbullionmtnmesq_m7p27_se_for-map_fault.txt')
-    assert filecmp.cmp(test, target) is True
-
-    target = os.path.join(targetinput, 'pisgahbullionmtnmesq_m7p27_se-fault-for-calc.txt')
-    test = os.path.join(testinput, 'pisgahbullionmtnmesq_m7p27_se-fault-for-calc.txt')
     assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
@@ -147,16 +141,14 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
 
     # Check output files
 
-    # Note: Not checking event.xml because the timestamp breaks cmp comparison.
-    #       Would need to parse and to tag comaprisons. Not worth it. 
+    # Note: Not checking event.xml and rupture.json because the timestamp breaks
+    #       cmp comparison. Would need to parse and to tag comaprisons. Not worth 
+    #       it. 
 
     target = os.path.join(targetinput, 'pisgahbullionmtnmesq_m7p27_se_for-map_fault.txt')
     test = os.path.join(testinput, 'pisgahbullionmtnmesq_m7p27_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
-    target = os.path.join(targetinput, 'pisgahbullionmtnmesq_m7p27_se-fault-for-calc.txt')
-    test = os.path.join(testinput, 'pisgahbullionmtnmesq_m7p27_se-fault-for-calc.txt')
-    assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids

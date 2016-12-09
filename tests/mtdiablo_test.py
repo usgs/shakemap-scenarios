@@ -54,11 +54,6 @@ def test_mtdiablo(tmpdir):
         testinput, 'mountdiablothrustell_m6p67_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
-    target = os.path.join(
-        targetinput, 'mountdiablothrustell_m6p67_se-fault-for-calc.txt')
-    test = os.path.join(
-        testinput, 'mountdiablothrustell_m6p67_se-fault-for-calc.txt')
-    assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids

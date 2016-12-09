@@ -53,7 +53,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Read in rupture
     #---------------------------------------------------------------------------
-    cmd = 'ls %s/*fault-for-calc.txt' % (input_dir)
+    cmd = 'ls %s/*rupture.json' % (input_dir)
     rc, so, se = get_command_output(cmd)
 
     if rc is True:
@@ -271,9 +271,6 @@ def main(args):
     sgrid = GMTGrid(mmi_sd[0], smdict)
     mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
     sgrid.save(os.path.join(input_dir, 'mi_sd.grd'))
-
-    # Write rupture.json
-    rupt.writeGeoJson(os.path.join(input_dir, 'rupture.json'))
 
     # Also write GMPE set name to a file to put into info.json later
     gmpefile = open(os.path.join(input_dir, "gmpe_set_name.txt"), "w")

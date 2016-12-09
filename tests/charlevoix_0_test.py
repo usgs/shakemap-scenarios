@@ -49,9 +49,6 @@ def test_charlevoix_0(tmpdir):
     test = os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
-    target = os.path.join(targetinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
-    assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
@@ -148,9 +145,6 @@ def test_charlevoix_0_shallow(tmpdir):
     test = os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
-    target = os.path.join(targetinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
-    test = os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt')
-    assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
@@ -238,9 +232,8 @@ def test_charlevoix_0_no_rupture(tmpdir):
     # Check for errors/warnings
 #    assert se == b''
 
-    # Remove rupture files:
-    os.remove(os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt'))
-    os.remove(os.path.join(testinput, 'charlevoix_0_m7p_se-fault-for-calc.txt'))
+    # Remove rupture file:
+    os.remove(os.path.join(testinput, 'rupture.json'))
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
