@@ -46,22 +46,22 @@ def main(args):
     xml_file = os.path.join(input_dir, 'event.xml')
 
     #---------------------------------------------------------------------------
-    # Read in event.xml
+    # Read in event.xml and create Origin object
     #---------------------------------------------------------------------------
-    event = read_event_xml(xml_file)
+    origin = Origin.fromFile(xml_file)
 
     #---------------------------------------------------------------------------
-    # Read in rupture and make event dictionary
+    # Read in rupture
     #---------------------------------------------------------------------------
-    cmd = 'ls %s/*fault-for-calc.txt' % (input_dir)
+    cmd = 'ls %s/*rupture.json' % (input_dir)
     rc, so, se = get_command_output(cmd)
 
     if rc is True:
         # There is a rupture
         ruptfile = so.decode('utf-8').strip()
-        rupt = read_rupture_file(ruptfile)
+        rupt = read_rupture_file(origin, ruptfile)
     else:
-        rupt = PointRupture()
+        rupt = PointRupture(origin)
 
     #---------------------------------------------------------------------------
     # Get DualDistanceWeights instance
@@ -70,7 +70,7 @@ def main(args):
     set_name = args.gmpe
     if set_name == 'nshmp14_shallow':
         # Select between SCR and ACR
-        stable = is_stable(event['lon'], event['lat'])
+        stable = is_stable(origin.lon, origin.lat)
 
         if stable is True:
             # if SCR check for rupture
@@ -89,10 +89,8 @@ def main(args):
     #       are always a subset of small distance sets. 
 
     #---------------------------------------------------------------------------
-    # Make origin instance and compute extent
+    # Compute extent
     #---------------------------------------------------------------------------
-    origin = Origin(event)
-
     lonmin, lonmax, latmin, latmax = get_extent(origin, rupt)
 
     # Adjust extent to be divisible by resolution
@@ -131,7 +129,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Make rupture context
     #---------------------------------------------------------------------------
-    rx = rupt.getRuptureContext(gmpes, origin)
+    rx = rupt.getRuptureContext(gmpes)
 
     #---------------------------------------------------------------------------
     # Vs30 stuff
@@ -173,7 +171,7 @@ def main(args):
     dep = np.zeros_like(lon)
 
     # Compute distances and site parameters on mesh.
-    dist = Distance(gmpes, origin, rupt, lat, lon, dep)
+    dist = Distance(gmpes, lat, lon, dep, rupt)
     dx = dist.getDistanceContext()
 
     #---------------------------------------------------------------------------
@@ -198,9 +196,9 @@ def main(args):
     #---------------------------------------------------------------------------
     # Directivity
     #---------------------------------------------------------------------------
-    if event['directivity'] is True:
+    if origin.directivity is True:
         R13 = Rowshandel2013.fromSites(
-            origin, sites, dx=1.0, T=[1.0, 3.0],
+            origin, rupt, sites, dx=1.0, T=[1.0, 3.0],
             a_weight=0.5, mtype=1)
         fd1 = R13.getFd()[0]
         fd3 = R13.getFd()[1]
@@ -223,7 +221,7 @@ def main(args):
         #       eventually available, need to move the sigma
         #       adjustment into this if-statement.
         #-----------------------------------------------------------------------
-        if event['directivity'] is True:
+        if origin.directivity is True:
             if (key == 'pgv') | (key == 'psa10'):
                 fd = fd1
             elif (key == 'psa30'):
@@ -256,7 +254,7 @@ def main(args):
             sgrid.save(os.path.join(input_dir, key + '_sd.grd'))
 
         # Also write directivity factors to a file
-        if event['directivity'] is True:
+        if origin.directivity is True:
             fd1grd = GMTGrid(fd1, smdict)
             fd3grd = GMTGrid(fd3, smdict)
             fd1grd.save(os.path.join(input_dir, 'fd1.grd'))

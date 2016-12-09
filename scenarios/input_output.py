@@ -9,6 +9,7 @@ from lxml import etree
 import openquake.hazardlib.geo as geo
 
 from shakemap.grind.rupture import QuadRupture
+from shakemap.grind.origin import Origin
 from shakemap.utils.timeutils import ShakeDateTime
 
 from scenarios.utils import get_event_id
@@ -138,10 +139,7 @@ def write_event_xml(input_dir, rdict, directivity):
 
 def write_rupture_files(input_dir, rdict):
     """
-    Write rupture files for scenarios. This includes one for distance
-    calculations, which is the full representation of the rupture, and
-    also a simplified version for plotting on a map that is just the
-    trace of the top and bottom edges. 
+    Write rupture files for scenarios. 
 
     Args:
         input_dir (str): Path of event input directory. 
@@ -149,29 +147,27 @@ def write_rupture_files(input_dir, rdict):
 
     """
     rupture = rdict['rupture']
-    rupture.writeTextFile(os.path.join(
-        input_dir, rdict['id_str'] + '-fault-for-calc.txt'))
 
+    # Write rupture.json file
+    rupture.writeGeoJson(os.path.join(input_dir, 'rupture.json') )
+
+    # No longer write the fault.txt file for calculations since it is 
+    # better to use rupture.json
+
+    # Still need to write a fault.txt file for ShakeMap 3.5 to display on maps
     ff = open(os.path.join(
         input_dir, rdict['id_str'] + '_for-map_fault.txt'), 'wt')
 
-    top = rdict['edges'][0]
-    bot = rdict['edges'][1]
-    top_lat = [p.latitude for p in top]
-    top_lon = [p.longitude for p in top]
-    top_dep = [p.depth for p in top]
-    bot_lat = [p.latitude for p in bot]
-    bot_lon = [p.longitude for p in bot]
-    bot_dep = [p.depth for p in bot]
-
-    nl = len(top_lon)
-    for i in range(0, nl):  # top edge
-        ff.write('%.4f %.4f %.4f\n' % (top_lat[i], top_lon[i], top_dep[i]))
-    for i in list(reversed(range(0, nl))):  # bottom edge
-        ff.write('%.4f %.4f %.4f\n' % (bot_lat[i], bot_lon[i], bot_dep[i]))
-    # Close the polygon loop
-    ff.write('%.4f %.4f %.4f\n' % (top_lat[0], top_lon[0], top_dep[0]))
-
+    # Use geojson to write text file (top/bot are now depcrecated and
+    # be removed altogether from the code)
+    coords = rupture._geojson['features'][0]['geometry']['coordinates']
+    n_polys = len(coords[0])
+    for i in range(n_polys):
+        poly = coords[0][i]
+        npts = len(poly)
+        for j in range(npts):
+            ff.write('%.4f %.4f %.4f\n' %(poly[j][1], poly[j][0], poly[j][2]))
+        ff.write('>\n')
     ff.close()
 
 
@@ -254,45 +250,40 @@ def parse_bssc2014_ucerf(rupts, args):
             new_seg_ind.extend([secind] * n_sec_trace)
             secind = secind + 1
 
+        # Origin
+        origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
         rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
-                                     width_sec, dip_sec, strike=strike_sec,
+                                     width_sec, dip_sec, origin, strike=strike_sec,
+                                     group_index = new_seg_ind,
                                      reference=args.reference)
 
-        rupt._segment_index = new_seg_ind
-
         quads = rupt.getQuadrilaterals()
+        edges = get_rupture_edges(quads, rev)
+        hlat, hlon, hdepth = get_hypo(edges, args)
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind, quads)
 
-        event = {'lat': 0,
-                 'lon': 0,
-                 'depth': 0,
+        event = {'lat': hlat,
+                 'lon': hlon,
+                 'depth': hdepth,
                  'mag': magnitude,
                  'rake':rake,
                  'id': id_str,
                  'locstring': event_name,
-                 'type': 'U',  # overwrite later
-                 'timezone': 'UTC'}
-        event['time'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
-        event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 'type': 'ALL',
+                 'timezone': 'UTC',
+                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
+                     }
 
-        #-----------------------------------------------------------------------
-        # For map display and hypo placement get trace of top/bottom edges and
-        # put them in order.
-        #-----------------------------------------------------------------------
+        # Update rupture with new origin info
+        origin = Origin(event)
+        rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
+                                     width_sec, dip_sec, origin, strike=strike_sec,
+                                     group_index = new_seg_ind,
+                                     reference=args.reference)
 
-        edges = get_rupture_edges(quads, rev)
-
-        #-----------------------------------------------------------------------
-        # Hypocenter placement
-        #-----------------------------------------------------------------------
-
-        hlat, hlon, hdepth = get_hypo(edges, args)
-
-        event['lat'] = hlat
-        event['lon'] = hlon
-        event['depth'] = hdepth
 
         rdict = {'rupture':rupt,
                  'event':event,
@@ -364,15 +355,17 @@ def parse_json(rupts, args):
             P1 = geo.point.Point(lons[0], lats[0])
             P2 = geo.point.Point(lons[-1], lats[-1])
             strike = np.array([P1.azimuth(P2)])
-            
+
+            # Dummy origin
+            origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
             rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
-                                         widths, dips, strike=strike,
+                                         widths, dips, origin, strike=strike,
                                          reference=args.reference)
 
-            rupt._segment_index = np.zeros_like(xp0)
+
 
             quads = rupt.getQuadrilaterals()
-            edges = get_rupture_edges(quads) # for map and hypo placement
+            edges = get_rupture_edges(quads) # for hypo placement
             hlat, hlon, hdepth = get_hypo(edges, args)
         else:
             rupt = None
@@ -391,10 +384,18 @@ def parse_json(rupts, args):
                  'rake':rake,
                  'id': id_str,
                  'locstring': event_name,
-                 'type': 'U',  # overwrite later
-                 'timezone': 'UTC'}
-        event['time'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
-        event['created'] = ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 'type': 'ALL',
+                 'timezone': 'UTC',
+                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
+                     }
+
+        # Update rupture with new origin info
+        if rupt is not None:
+            origin = Origin(event)
+            rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
+                                         widths, dips, origin, strike=strike,
+                                         reference=args.reference)
 
         rdict = {'rupture':rupt,
                  'event':event,
@@ -459,7 +460,7 @@ def parse_json_sub(rupts, args):
         rupt._segment_index = np.zeros_like(xp0)
 
         quads = rupt.getQuadrilaterals()
-        edges = get_rupture_edges(quads) # for map and hypo placement
+        edges = get_rupture_edges(quads) # for hypo placement
         hlat, hlon, hdepth = get_hypo(edges, args)
 
         id_str, eventsourcecode, real_desc = get_event_id(

@@ -161,8 +161,8 @@ def get_extent(origin, rupture=None):
 
     # Is there a rupture?
     if isinstance(rupture, (QuadRupture, EdgeRupture)):
-        lats = rupture.getLats()
-        lons = rupture.getLons()
+        lats = rupture.lats
+        lons = rupture.lons
 
         # Remove nans
         lons = lons[~np.isnan(lons)]
