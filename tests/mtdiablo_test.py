@@ -2,6 +2,7 @@
 import os
 import sys
 import filecmp
+import shutil
 
 # third party
 import pytest
@@ -40,8 +41,6 @@ def test_mtdiablo(tmpdir):
         print(so.decode())
         print(se.decode())
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
 
@@ -64,8 +63,6 @@ def test_mtdiablo(tmpdir):
           '-v %s -s %s' %('mountdiablothrustell_m6p67_se', v, p)
     rc,so,se = get_command_output(cmd)
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
@@ -115,6 +112,8 @@ def test_mtdiablo(tmpdir):
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
+
+    shutil.rmtree(p)
 
 
 if __name__ == "__main__":
