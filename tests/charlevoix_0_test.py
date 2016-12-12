@@ -2,6 +2,7 @@
 import os
 import sys
 import filecmp
+import shutil
 
 # third party
 import pytest
@@ -37,8 +38,6 @@ def test_charlevoix_0(tmpdir):
         print(so.decode())
         print(se.decode())
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
 
@@ -59,8 +58,6 @@ def test_charlevoix_0(tmpdir):
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
@@ -110,6 +107,8 @@ def test_charlevoix_0(tmpdir):
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
+
+    shutil.rmtree(p)
 
 def test_charlevoix_0_shallow(tmpdir):
     # make a temporary directory; read in rupture file
@@ -133,8 +132,6 @@ def test_charlevoix_0_shallow(tmpdir):
         print(so.decode())
         print(se.decode())
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
 
@@ -155,8 +152,6 @@ def test_charlevoix_0_shallow(tmpdir):
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
@@ -206,6 +201,9 @@ def test_charlevoix_0_shallow(tmpdir):
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
+
+    shutil.rmtree(p)
+
 
 def test_charlevoix_0_no_rupture(tmpdir):
     # make a temporary directory; read in rupture file
@@ -229,8 +227,6 @@ def test_charlevoix_0_no_rupture(tmpdir):
         print(so.decode())
         print(se.decode())
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Remove rupture file:
     os.remove(os.path.join(testinput, 'rupture.json'))
@@ -243,9 +239,7 @@ def test_charlevoix_0_no_rupture(tmpdir):
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
 
-    # Do not check standard error becasue there is a warning that
-    # median distances are used. 
-#    assert se == b''
+
 
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
@@ -295,6 +289,9 @@ def test_charlevoix_0_no_rupture(tmpdir):
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
+
+    shutil.rmtree(p)
+
 
 if __name__ == "__main__":
     td = tempfile.TemporaryDirectory()

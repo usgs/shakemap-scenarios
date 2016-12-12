@@ -55,6 +55,8 @@ def main(args):
     #---------------------------------------------------------------------------
     cmd = 'ls %s/*rupture.json' % (input_dir)
     rc, so, se = get_command_output(cmd)
+    if args.verbose is True:
+        print('Rupture file: %s\n' %so.decode('utf-8').strip())
 
     if rc is True:
         # There is a rupture
@@ -81,6 +83,9 @@ def main(args):
         else:
             set_name = 'nshmp14_acr'
     ddw = DualDistanceWeights.from_set_name(set_name)
+
+    if args.verbose is True:
+        print('GMPE set: %s\n' %set_name)
 
     # Need GMPE list for distances etc.
     gmpes = ddw.mgmpe_small.GMPES
@@ -126,10 +131,22 @@ def main(args):
                'nx': nx, 'ny': ny}
     smdict = GeoDict(tmpdict, adjust='bounds')
 
+    if args.verbose is True:
+        print('Geodictionary:')
+        print(smdict)
+        print('')
+
     #---------------------------------------------------------------------------
     # Make rupture context
     #---------------------------------------------------------------------------
     rx = rupt.getRuptureContext(gmpes)
+
+    if args.verbose is True:
+        print('Rupture context:')
+        print('Mag: %s' %rx.mag)
+        print('Hyp lat: %s' %rx.hypo_lat)
+        print('Hyp lon: %s' %rx.hypo_lon)
+        print('Hyp dep: %s\n' %rx.hypo_depth)
 
     #---------------------------------------------------------------------------
     # Vs30 stuff
@@ -144,6 +161,13 @@ def main(args):
 
     # Clip Vs30 do avoid interpolation error
     sx.vs30 = np.clip(sx.vs30, 0, 2000)
+
+    if args.verbose is True:
+        print('Sites context:')
+        print('Lons: %s to %s' %(np.min(sx.lons), np.max(sx.lons)))
+        print('Lats: %s to %s' %(np.min(sx.lats), np.max(sx.lats)))
+        print('Min Vs30: %s' %np.min(sx.vs30))
+        print('Max Vs30: %s\n' %np.max(sx.vs30))
 
     #---------------------------------------------------------------------------
     # Standard deviation stuff
@@ -170,9 +194,19 @@ def main(args):
     lon, lat = np.meshgrid(lons, lats)
     dep = np.zeros_like(lon)
 
+    if args.verbose is True:
+        print('Mesh:')
+        print('Lons: %s to %s' %(np.min(lons), np.max(lons)))
+        print('Lats: %s to %s\n' %(np.min(lats), np.max(lats)))
+
     # Compute distances and site parameters on mesh.
-    dist = Distance(gmpes, lat, lon, dep, rupt)
+    dist = Distance(gmpes, lon, lat, dep, rupt)
     dx = dist.getDistanceContext()
+
+    if args.verbose is True:
+        print('Distance context:')
+        print('Min Rjb: %s' %np.min(dx.rjb))
+        print('Max Rjb: %s\n' %np.max(dx.rjb))
 
     #---------------------------------------------------------------------------
     # Intensity measure calculation
@@ -236,29 +270,35 @@ def main(args):
         imdict[key]['mean'] = lnmu
         imdict[key]['sigma'] = lnsd[0]
 
-        #-----------------------------------------------------------------------
-        # Write files
-        #-----------------------------------------------------------------------
+    #-----------------------------------------------------------------------
+    # Write files
+    #-----------------------------------------------------------------------
 
-        # Loop over intensity dictionary (PGA PGV, PSA03, PSA10, PSA30)
-        for key, val in imdict.items():
-            if key != 'pgv':
-                # Note that the output is in units of ln(g), whereas
-                # ShakeMap wants %g
-                mgrid = GMTGrid(100 * np.exp(imdict[key]['mean']), smdict)
-                sgrid = GMTGrid(imdict[key]['sigma'], smdict)
-            else:
-                mgrid = GMTGrid(np.exp(imdict[key]['mean']), smdict)
-                sgrid = GMTGrid(imdict[key]['sigma'], smdict)
-            mgrid.save(os.path.join(input_dir, key + '_estimates.grd'))
-            sgrid.save(os.path.join(input_dir, key + '_sd.grd'))
+    # Loop over intensity dictionary (PGA PGV, PSA03, PSA10, PSA30)
+    for key, val in imdict.items():
+        if key != 'pgv':
+            # Note that the output is in units of ln(g), whereas
+            # ShakeMap wants %g
+            mgrid = GMTGrid(100 * np.exp(imdict[key]['mean']), smdict)
+            sgrid = GMTGrid(imdict[key]['sigma'], smdict)
+        else:
+            mgrid = GMTGrid(np.exp(imdict[key]['mean']), smdict)
+            sgrid = GMTGrid(imdict[key]['sigma'], smdict)
 
-        # Also write directivity factors to a file
-        if origin.directivity is True:
-            fd1grd = GMTGrid(fd1, smdict)
-            fd3grd = GMTGrid(fd3, smdict)
-            fd1grd.save(os.path.join(input_dir, 'fd1.grd'))
-            fd3grd.save(os.path.join(input_dir, 'fd3.grd'))
+        if args.verbose is True:
+            print('Min %s: %s' %(key, np.min(mgrid.getData())))
+            print('Max %s: %s\n' %(key, np.max(mgrid.getData())))
+
+        # Write to file
+        mgrid.save(os.path.join(input_dir, key + '_estimates.grd'))
+        sgrid.save(os.path.join(input_dir, key + '_sd.grd'))
+
+    # Also write directivity factors to a file
+    if origin.directivity is True:
+        fd1grd = GMTGrid(fd1, smdict)
+        fd3grd = GMTGrid(fd3, smdict)
+        fd1grd.save(os.path.join(input_dir, 'fd1.grd'))
+        fd3grd.save(os.path.join(input_dir, 'fd3.grd'))
 
     #---------------------------------------------------------------------------
     # MMI - Use VirtualIPE
@@ -269,6 +309,12 @@ def main(args):
 
     mgrid = GMTGrid(mmi, smdict)
     sgrid = GMTGrid(mmi_sd[0], smdict)
+
+    if args.verbose is True:
+        print('Min MI: %s' %np.min(mgrid.getData()))
+        print('Max MI: %s\n' %np.max(mgrid.getData()))
+
+    # Write to file
     mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
     sgrid.save(os.path.join(input_dir, 'mi_sd.grd'))
 
@@ -315,5 +361,8 @@ if __name__ == '__main__':
     parser.add_argument(
         '-s', '--shakehome',
         help='the location of ShakeMap install; default is %s.' % shakehome)
+    parser.add_argument(
+        '--verbose', action="store_true", default=False, 
+        help = 'Add verbose output.')
     args = parser.parse_args()
     main(args)

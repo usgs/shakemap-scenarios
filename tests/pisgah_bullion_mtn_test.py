@@ -2,6 +2,7 @@
 import os
 import sys
 import filecmp
+import shutil
 
 # third party
 import pytest
@@ -59,57 +60,59 @@ def test_pisgah_bullion_mtn(tmpdir):
           '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
     rc,so,se = get_command_output(cmd)
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
+    rtol = 1e-5
     target = os.path.join(targetinput, 'mi_estimates.grd')
     test = os.path.join(testinput, 'mi_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'mi_sd.grd')
     test = os.path.join(testinput, 'mi_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pga_estimates.grd')
     test = os.path.join(testinput, 'pga_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pga_sd.grd')
     test = os.path.join(testinput, 'pga_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pgv_estimates.grd')
     test = os.path.join(testinput, 'pgv_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pgv_sd.grd')
     test = os.path.join(testinput, 'pgv_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa03_estimates.grd')
     test = os.path.join(testinput, 'psa03_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa03_sd.grd')
     test = os.path.join(testinput, 'psa03_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa10_estimates.grd')
     test = os.path.join(testinput, 'psa10_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa10_sd.grd')
     test = os.path.join(testinput, 'psa10_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa30_estimates.grd')
     test = os.path.join(testinput, 'psa30_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
+
+    shutil.rmtree(p)
+
 
 def test_pisgah_bullion_mtn_shallow(tmpdir):
     # Same as before but this time check that NSHMPshallow option also
@@ -136,8 +139,6 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
         print(so.decode())
         print(se.decode())
 
-    # Check for errors/warnings
-#    assert se == b''
 
     # Check output files
 
@@ -159,57 +160,57 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
           '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
     rc,so,se = get_command_output(cmd)
 
-    # Check for errors/warnings
-#    assert se == b''
-
     # Check output files
+    rtol = 1e-5
     target = os.path.join(targetinput, 'mi_estimates.grd')
     test = os.path.join(testinput, 'mi_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'mi_sd.grd')
     test = os.path.join(testinput, 'mi_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pga_estimates.grd')
     test = os.path.join(testinput, 'pga_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pga_sd.grd')
     test = os.path.join(testinput, 'pga_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pgv_estimates.grd')
     test = os.path.join(testinput, 'pgv_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'pgv_sd.grd')
     test = os.path.join(testinput, 'pgv_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa03_estimates.grd')
     test = os.path.join(testinput, 'psa03_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa03_sd.grd')
     test = os.path.join(testinput, 'psa03_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa10_estimates.grd')
     test = os.path.join(testinput, 'psa10_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa10_sd.grd')
     test = os.path.join(testinput, 'psa10_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa30_estimates.grd')
     test = os.path.join(testinput, 'psa30_estimates.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
 
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
-    cmp(test, target)
+    cmp(test, target, rtol = rtol)
+
+    shutil.rmtree(p)
 
 
 if __name__ == "__main__":
