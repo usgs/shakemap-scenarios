@@ -557,9 +557,11 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
     grind_conf = os.path.join(confdir, 'grind.conf')
     shutil.copyfile(default_grind_conf, grind_conf)
 
-    sbstr = '     strictbound : %.9f %.9f %.9f %.9f' %(W, S, E, N)
+    # Set strictbound and resolution to match estiamtes.grd files
     with open(grind_conf, 'a') as f:
-        f.write(sbstr)
+        f.write('x_grid_interval : %.16f\n' %gdict.dx)
+        f.write('y_grid_interval : %.16f\n' %gdict.dy)
+        f.write('strictbound : %.9f %.9f %.9f %.9f\n' %(W, S, E, N))
 
     # Grind
     callgrind = os.path.join(shakebin, 'grind') + ' -event ' + eventid + ' -psa'
