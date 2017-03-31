@@ -5,6 +5,7 @@ import argparse
 import warnings
 
 import numpy as np
+from collections import OrderedDict
 
 #-------------------------------------------------------------------------------
 # Openquake utilities
@@ -12,6 +13,7 @@ from openquake.hazardlib import imt, const
 
 from mapio.geodict import GeoDict
 from mapio.gmt import GMTGrid
+from mapio.shake import ShakeGrid
 
 # Shakemap imports
 from shakemap.grind.rupture import QuadRupture
@@ -24,6 +26,7 @@ from shakemap.grind.multigmpe import DualDistanceWeights
 from shakemap.grind.multigmpe import filter_gmpe_list
 from shakemap.grind.directivity.rowshandel2013 import Rowshandel2013
 from shakemap.utils.timeutils import ShakeDateTime
+from datetime import datetime
 from shakemap.grind.gmice.wgrw12 import WGRW12
 from shakemap.grind.virtualipe import VirtualIPE
 
@@ -158,6 +161,7 @@ def main(args):
     # Sites object
     sites = Sites(vs30grid)
     sx = sites.getSitesContext()
+    sx_rock = sites.getSitesContext(rock_vs30=760)
 
     # Clip Vs30 do avoid interpolation error
     sx.vs30 = np.clip(sx.vs30, 0, 2000)
@@ -227,6 +231,18 @@ def main(args):
               'psa30': {'mean': np.zeros(orig_shape),
                         'sigma': np.zeros(orig_shape)}}
 
+    ## For rock
+    imdict_rock = {'pga': {'mean': np.zeros(orig_shape),
+                           'sigma': np.zeros(orig_shape)},
+                   'pgv': {'mean': np.zeros(orig_shape),
+                           'sigma': np.zeros(orig_shape)},
+                   'psa03': {'mean': np.zeros(orig_shape),
+                             'sigma': np.zeros(orig_shape)},
+                   'psa10': {'mean': np.zeros(orig_shape),
+                             'sigma': np.zeros(orig_shape)},
+                   'psa30': {'mean': np.zeros(orig_shape),
+                             'sigma': np.zeros(orig_shape)}}
+
     #---------------------------------------------------------------------------
     # Directivity
     #---------------------------------------------------------------------------
@@ -247,6 +263,8 @@ def main(args):
         ddw = DualDistanceWeights.from_set_name(set_name, iimt)
         lnmu, lnsd = ddw.get_mean_and_stddevs(
                 sx, rx, dx, iimt, stddev_types)
+        lnmu_rock, lnsd_rock = ddw.get_mean_and_stddevs(
+                sx_rock, rx, dx, iimt, stddev_types)
 
         #-----------------------------------------------------------------------
         # Handle directivity factors
@@ -265,10 +283,14 @@ def main(args):
                 fd = 0
 
             lnmu = lnmu + fd
+            lnmu_rock = lnmu_rock + fd
 
         # Put into intensity measure dictionary
         imdict[key]['mean'] = lnmu
         imdict[key]['sigma'] = lnsd[0]
+
+        imdict_rock[key]['mean'] = lnmu_rock
+        imdict_rock[key]['sigma'] = lnsd_rock[0]
 
     #-----------------------------------------------------------------------
     # Write files
@@ -292,6 +314,7 @@ def main(args):
         # Write to file
         mgrid.save(os.path.join(input_dir, key + '_estimates.grd'))
         sgrid.save(os.path.join(input_dir, key + '_sd.grd'))
+
 
     # Also write directivity factors to a file
     if origin.directivity is True:
@@ -318,10 +341,48 @@ def main(args):
     mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
     sgrid.save(os.path.join(input_dir, 'mi_sd.grd'))
 
-    # Also write GMPE set name to a file to put into info.json later
+    # Write GMPE set name to a file to put into info.json later
     gmpefile = open(os.path.join(input_dir, "gmpe_set_name.txt"), "w")
     gmpefile.write(set_name)
     gmpefile.close()
+
+    # Need to write rock_grid.xml
+    layers = OrderedDict()
+    layers['pga'] = imdict_rock['pga']['mean']
+    layers['pgv'] = imdict_rock['pgv']['mean']
+    layers['mmi'] = mmi
+    layers['psa03'] = imdict_rock['psa03']['mean']
+    layers['psa10'] = imdict_rock['psa10']['mean']
+    layers['psa30'] = imdict_rock['psa30']['mean']
+    shakeDict = {'event_id':id_str,
+                 'shakemap_id':id_str,
+                 'shakemap_version':1,
+                 'code_version':'4.0',
+                 'process_timestamp':datetime.utcnow(),
+                 'shakemap_originator':'us',
+                 'map_status':'RELEASED',
+                 'shakemap_event_type':'SCENARIO'}
+    eventDict = {'event_id':id_str,
+                 'magnitude':rx.mag,
+                 'depth':rx.hypo_depth,
+                 'lat':rx.hypo_lat,
+                 'lon':rx.hypo_lon,
+                 'event_timestamp':datetime.utcnow(),
+                 'event_network':'us',
+                 'event_description':""}
+    # Note: cannot put standard deviations here becaus they go
+    # into uncertainty.xml; in the current version of shakemap there
+    # is no where to put rock grid standard deviations. We should
+    # change this in the next udpate. The uncertainty here is based on
+    # instrumental records and so it is not really meaningful for scenarios.
+    uncDict = {'pga':(0, 0),
+               'pgv':(0, 0),
+               'mmi':(0, 0),
+               'psa03':(0, 0),
+               'psa10':(0, 0),
+               'psa30':(0, 0) }
+    shake = ShakeGrid(layers, smdict, eventDict, shakeDict, uncDict)
+    shake.save(os.path.join(input_dir, "rock_grid.xml"),version=1)
 
 
 if __name__ == '__main__':
