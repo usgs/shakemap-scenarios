@@ -348,12 +348,12 @@ def main(args):
 
     # Need to write rock_grid.xml
     layers = OrderedDict()
-    layers['pga'] = imdict_rock['pga']['mean']
-    layers['pgv'] = imdict_rock['pgv']['mean']
+    layers['pga'] = 100*np.exp(imdict_rock['pga']['mean'])
+    layers['pgv'] = np.exp(imdict_rock['pgv']['mean'])
     layers['mmi'] = mmi
-    layers['psa03'] = imdict_rock['psa03']['mean']
-    layers['psa10'] = imdict_rock['psa10']['mean']
-    layers['psa30'] = imdict_rock['psa30']['mean']
+    layers['psa03'] = 100*np.exp(imdict_rock['psa03']['mean'])
+    layers['psa10'] = 100*np.exp(imdict_rock['psa10']['mean'])
+    layers['psa30'] = 100*np.exp(imdict_rock['psa30']['mean'])
     shakeDict = {'event_id':id_str,
                  'shakemap_id':id_str,
                  'shakemap_version':1,
