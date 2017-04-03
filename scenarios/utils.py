@@ -580,6 +580,11 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
         event['description'] + '\"'
     rc,so,se = get_command_output(calltag)
     log['tag'] = {'rc':rc, 'so':so, 'se':se}
+
+    # Copy rock_grid.xml from input to output directory
+    rg_scr = os.path.join(inputdir, 'rock_grid.xml')
+    rg_dst = os.path.join(eventdir, 'output', 'rock_grid.xml')
+    cmd = shutil.copy(rg_scr, rg_dst)
     
     # Mapping
     callmapping = os.path.join(shakebin, 'mapping') + ' -event ' + \
