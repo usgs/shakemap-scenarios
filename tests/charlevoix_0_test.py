@@ -111,6 +111,9 @@ def test_charlevoix_0(tmpdir):
     shutil.rmtree(p)
 
 def test_charlevoix_0_shallow(tmpdir):
+    # Same as previous test, but grids are computed with the "shallow" option
+    # rather than specifying the GMPE set
+
     # make a temporary directory; read in rupture file
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
@@ -211,5 +214,5 @@ if __name__ == "__main__":
     td = tempfile.TemporaryDirectory()
     test_charlevoix_0(td.name)
     test_charlevoix_0_shallow(td.name)
-    test_charlevoix_0_no_rupture(td.name)
+
 
