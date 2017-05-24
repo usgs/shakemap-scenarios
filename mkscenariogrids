@@ -67,6 +67,9 @@ def main(args):
         rupt = read_rupture_file(origin, ruptfile)
     else:
         rupt = PointRupture(origin)
+    
+    # Set the dx for the rupture meshing
+    rupt._mesh_dx = args.mesh_dx
 
     #---------------------------------------------------------------------------
     # Get DualDistanceWeights instance
@@ -201,7 +204,8 @@ def main(args):
     if args.verbose is True:
         print('Mesh:')
         print('Lons: %s to %s' %(np.min(lons), np.max(lons)))
-        print('Lats: %s to %s\n' %(np.min(lats), np.max(lats)))
+        print('Lats: %s to %s' %(np.min(lats), np.max(lats)))
+        print('mesh_dx: %f\n' %rupt._mesh_dx)
 
     # Compute distances and site parameters on mesh.
     dist = Distance(gmpes, lon, lat, dep, rupt)
@@ -209,8 +213,8 @@ def main(args):
 
     if args.verbose is True:
         print('Distance context:')
-        print('Min Rjb: %s' %np.min(dx.rjb))
-        print('Max Rjb: %s\n' %np.max(dx.rjb))
+        print('Min Rrup: %s' %np.min(dx.rrup))
+        print('Max Rrup: %s\n' %np.max(dx.rrup))
 
     #---------------------------------------------------------------------------
     # Intensity measure calculation
@@ -422,6 +426,10 @@ if __name__ == '__main__':
     parser.add_argument(
         '-s', '--shakehome',
         help='the location of ShakeMap install; default is %s.' % shakehome)
+    parser.add_argument(
+        '--mesh_dx', default=0.5, type=float,
+        help='The resolution for rupture mesh in km; only used for EdgeRuptures; '\
+             'default is 0.5.')
     parser.add_argument(
         '--verbose', action="store_true", default=False, 
         help = 'Add verbose output.')

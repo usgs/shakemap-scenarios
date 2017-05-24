@@ -21,11 +21,11 @@ def test_charlevoix_0(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
-    jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
+    jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/bssc2014_ceus.json')
 
     # directory holding test and target data for this event
     testinput = os.path.join(p, 'data/charlevoix_0_m7p_se/input')
-    targetinput = 'tests/output/charlevoix_0_m7p_se/input'
+    targetinput = os.path.join(shakedir, 'tests/output/charlevoix_0_m7p_se/input')
 
     #---------------------------------------------------------------------------
     # First test mkinputdir
@@ -53,7 +53,7 @@ def test_charlevoix_0(tmpdir):
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    v = 'tests/data/CharlevoixVs30.grd'
+    v = os.path.join(shakedir, 'tests/data/CharlevoixVs30.grd')
     cmd = 'mkscenariogrids -e %s -g nshmp14_scr_rlme -r 0.1 '\
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
@@ -118,11 +118,11 @@ def test_charlevoix_0_shallow(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
-    jsonfile = 'rupture_sets/BSSC2014/bssc2014_ceus.json'
+    jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/bssc2014_ceus.json')
 
     # directory holding test and target data for this event
     testinput = os.path.join(p, 'data/charlevoix_0_m7p_se/input')
-    targetinput = 'tests/output/charlevoix_0_m7p_se/input'
+    targetinput = os.path.join(shakedir, 'tests/output/charlevoix_0_m7p_se/input')
 
     #---------------------------------------------------------------------------
     # First test mkinputdir
@@ -150,7 +150,7 @@ def test_charlevoix_0_shallow(tmpdir):
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    v = 'tests/data/CharlevoixVs30.grd'
+    v = os.path.join(shakedir, 'tests/data/CharlevoixVs30.grd')
     cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
           '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
     rc,so,se = get_command_output(cmd)
