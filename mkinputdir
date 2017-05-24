@@ -8,6 +8,7 @@ from lxml import etree
 
 from scenarios.input_output import parse_bssc2014_ucerf
 from scenarios.input_output import parse_json
+from scenarios.input_output import parse_json_sub
 from scenarios.input_output import write_rupture_files
 from scenarios.input_output import write_event_xml
 
