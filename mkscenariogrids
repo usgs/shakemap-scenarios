@@ -284,7 +284,7 @@ def main(args):
         #       eventually available, need to move the sigma
         #       adjustment into this if-statement.
         #-----------------------------------------------------------------------
-        if origin.directivity is True:
+        if bool(origin.directivity) is True:
             if (key == 'pgv') | (key == 'psa10'):
                 fd = fd1
             elif (key == 'psa30'):
@@ -339,7 +339,7 @@ def main(args):
     #---------------------------------------------------------------------------
     gmice = WGRW12()
     vipe = VirtualIPE.fromFuncs(ddw.mgmpe_small, gmice)
-    mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types)
+    mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
 
     mgrid = GMTGrid(mmi, smdict)
     sgrid = GMTGrid(mmi_sd[0], smdict)
