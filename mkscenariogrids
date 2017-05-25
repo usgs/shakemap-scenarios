@@ -100,9 +100,12 @@ def main(args):
     #       are always a subset of small distance sets. 
 
     #---------------------------------------------------------------------------
-    # Compute extent
+    # Compute extent, or get from args
     #---------------------------------------------------------------------------
-    lonmin, lonmax, latmin, latmax = get_extent(origin, rupt)
+    if args.extent is None:
+        lonmin, lonmax, latmin, latmax = get_extent(origin, rupt)
+    else:
+        lonmin, latmin, lonmax, latmax = args.extent
 
     # Adjust extent to be divisible by resolution
     res = args.res
@@ -129,13 +132,12 @@ def main(args):
         ny = np.floor(latspan / res) + 1
         ncell = nx * ny
 
-
     # Geodictionary for this ShakeMap
     tmpdict = {'xmin': lonmin, 'xmax': lonmax,
                'ymin': latmin, 'ymax': latmax,
                'dx': res, 'dy': res,
                'nx': nx, 'ny': ny}
-    smdict = GeoDict(tmpdict, adjust='bounds')
+    smdict = GeoDict(tmpdict, adjust='res')
 
     if args.verbose is True:
         print('Geodictionary:')
@@ -159,6 +161,7 @@ def main(args):
     #---------------------------------------------------------------------------
     vs30filename = args.vs30
     vs30grid = GMTGrid.load(vs30filename, smdict, resample=True)
+
     vs30geodict = vs30grid.getGeoDict()
 
     # Sites object
@@ -430,6 +433,9 @@ if __name__ == '__main__':
         '--mesh_dx', default=0.5, type=float,
         help='The resolution for rupture mesh in km; only used for EdgeRuptures; '\
              'default is 0.5.')
+    parser.add_argument(
+        '--extent', nargs='+', help='Extent: lonmin, latmin, lonmax, latmax.', 
+        required=False, default=None, type=float)
     parser.add_argument(
         '--verbose', action="store_true", default=False, 
         help = 'Add verbose output.')
