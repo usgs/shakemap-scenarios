@@ -137,7 +137,7 @@ def main(args):
                'ymin': latmin, 'ymax': latmax,
                'dx': res, 'dy': res,
                'nx': nx, 'ny': ny}
-    smdict = GeoDict(tmpdict, adjust='res')
+    smdict = GeoDict(tmpdict, adjust='bounds')
 
     if args.verbose is True:
         print('Geodictionary:')
