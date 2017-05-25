@@ -58,6 +58,10 @@ def main(args):
     #---------------------------------------------------------------------------
     cmd = 'ls %s/*rupture.json' % (input_dir)
     rc, so, se = get_command_output(cmd)
+    if rc is False:
+        cmd = 'ls %s/*_fault.txt' % (input_dir)
+        rc, so, se = get_command_output(cmd)
+
     if args.verbose is True:
         print('Rupture file: %s\n' %so.decode('utf-8').strip())
 
@@ -253,7 +257,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Directivity
     #---------------------------------------------------------------------------
-    if origin.directivity is True:
+    if bool(origin.directivity) is True:
         R13 = Rowshandel2013.fromSites(
             origin, rupt, sites, dx=1.0, T=[1.0, 3.0],
             a_weight=0.5, mtype=1)
@@ -324,7 +328,7 @@ def main(args):
 
 
     # Also write directivity factors to a file
-    if origin.directivity is True:
+    if bool(origin.directivity) is True:
         fd1grd = GMTGrid(fd1, smdict)
         fd3grd = GMTGrid(fd3, smdict)
         fd1grd.save(os.path.join(input_dir, 'fd1.grd'))
