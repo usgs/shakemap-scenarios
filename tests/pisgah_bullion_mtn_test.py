@@ -24,11 +24,11 @@ def test_pisgah_bullion_mtn(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
-    jsonfile = 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json'
+    jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
     testinput = os.path.join(p, 'data/pisgahbullionmtnmesq_m7p27_se/input')
-    targetinput = 'tests/output/pisgah_bullion_mtn/input'
+    targetinput = os.path.join(shakedir, 'tests/output/pisgah_bullion_mtn/input')
 
     #---------------------------------------------------------------------------
     # First test mkinputdir
@@ -55,7 +55,7 @@ def test_pisgah_bullion_mtn(tmpdir):
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    v = 'tests/data/SCalVs30.grd'
+    v = os.path.join(shakedir, 'tests/data/SCalVs30.grd')
     cmd = 'mkscenariogrids -e %s -g nshmp14_acr -r 0.1 '\
           '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
     rc,so,se = get_command_output(cmd)
@@ -122,11 +122,11 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
-    jsonfile = 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json'
+    jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
     testinput = os.path.join(p, 'data/pisgahbullionmtnmesq_m7p27_se/input')
-    targetinput = 'tests/output/pisgah_bullion_mtn/input'
+    targetinput = os.path.join(shakedir, 'tests/output/pisgah_bullion_mtn/input')
 
     #---------------------------------------------------------------------------
     # First test mkinputdir
@@ -155,7 +155,7 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    v = 'tests/data/SCalVs30.grd'
+    v = os.path.join(shakedir, 'tests/data/SCalVs30.grd')
     cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
           '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
     rc,so,se = get_command_output(cmd)

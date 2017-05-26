@@ -339,7 +339,10 @@ def main(args):
     #---------------------------------------------------------------------------
     gmice = WGRW12()
     vipe = VirtualIPE.fromFuncs(ddw.mgmpe_small, gmice)
-    mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
+    if bool(origin.directivity) is True:
+        mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
+    else:
+        mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types)
 
     mgrid = GMTGrid(mmi, smdict)
     sgrid = GMTGrid(mmi_sd[0], smdict)
