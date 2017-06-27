@@ -71,7 +71,7 @@ def test_mtdiablo(tmpdir):
 
     target = os.path.join(targetinput, 'mi_sd.grd')
     test = os.path.join(testinput, 'mi_sd.grd')
-#    cmp(test, target)
+    cmp(test, target)
 
     target = os.path.join(targetinput, 'pga_estimates.grd')
     test = os.path.join(testinput, 'pga_estimates.grd')
