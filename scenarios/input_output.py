@@ -244,10 +244,10 @@ def parse_bssc2014_ucerf(rupts, args):
                 yp1 = np.append(yp1, yp1_sec)
                 zp = np.append(zp, zp_sec)
             else:
-                xp0 = np.append(xp0, xp0_sec[::-1])
-                xp1 = np.append(xp1, xp1_sec[::-1])
-                yp0 = np.append(yp0, yp0_sec[::-1])
-                yp1 = np.append(yp1, yp1_sec[::-1])
+                xp0 = np.append(xp0, xp1_sec[::-1])
+                xp1 = np.append(xp1, xp0_sec[::-1])
+                yp0 = np.append(yp0, yp1_sec[::-1])
+                yp1 = np.append(yp1, yp0_sec[::-1])
                 zp = np.append(zp, zp_sec[::-1])
             new_seg_ind.extend([secind] * n_sec_trace)
             secind = secind + 1
