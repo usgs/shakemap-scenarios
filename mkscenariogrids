@@ -16,21 +16,22 @@ from mapio.gmt import GMTGrid
 from mapio.shake import ShakeGrid
 
 # Shakemap imports
-from shakemap.grind.rupture import QuadRupture
-from shakemap.grind.rupture import PointRupture
-from shakemap.grind.rupture import read_rupture_file
-from shakemap.grind.origin import Origin
-from shakemap.grind.distance import Distance
-from shakemap.grind.sites import Sites
-from shakemap.grind.multigmpe import DualDistanceWeights
-from shakemap.grind.multigmpe import filter_gmpe_list
-from shakemap.grind.directivity.rowshandel2013 import Rowshandel2013
-from shakemap.utils.timeutils import ShakeDateTime
+from shakelib.grind.rupture import QuadRupture
+from shakelib.grind.rupture import PointRupture
+from shakelib.grind.rupture import read_rupture_file
+from shakelib.grind.origin import Origin
+from shakelib.grind.distance import Distance
+from shakelib.grind.sites import Sites
+from shakelib.grind.multigmpe import DualDistanceWeights
+from shakelib.grind.multigmpe import filter_gmpe_list
+from shakelib.grind.directivity.rowshandel2013 import Rowshandel2013
+#from shakelib.utils.timeutils import ShakeDateTime
 from datetime import datetime
-from shakemap.grind.gmice.wgrw12 import WGRW12
-from shakemap.grind.virtualipe import VirtualIPE
+from shakelib.grind.gmice.wgrw12 import WGRW12
+from shakelib.grind.virtualipe import VirtualIPE
 
 from impactutils.io.cmd import get_command_output
+from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
 from scenarios.utils import is_stable
 from scenarios.utils import get_extent

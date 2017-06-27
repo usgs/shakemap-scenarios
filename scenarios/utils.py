@@ -18,14 +18,15 @@ from openquake.hazardlib.geo.utils import get_orthographic_projection
 
 from mapio.gmt import GMTGrid
 from impactutils.io.cmd import get_command_output
+from impactutils.vectorutils.ecef import latlon2ecef, ecef2latlon
+from impactutils.vectorutils.vector import Vector
+from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
-from shakemap.grind.origin import Origin
-from shakemap.grind.origin import read_event_file
-from shakemap.utils.ecef import latlon2ecef, ecef2latlon
-from shakemap.utils.vector import Vector
-from shakemap.utils.timeutils import ShakeDateTime
-from shakemap.grind.rupture import EdgeRupture
-from shakemap.grind.rupture import QuadRupture
+from shakelib.grind.origin import Origin
+from shakelib.grind.origin import read_event_file
+#from shakelib.utils.timeutils import ShakeDateTime
+from shakelib.grind.rupture import EdgeRupture
+from shakelib.grind.rupture import QuadRupture
 
 
 def find_rupture(pattern, file):

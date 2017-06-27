@@ -8,10 +8,11 @@ from lxml import etree
 
 import openquake.hazardlib.geo as geo
 
-from shakemap.grind.rupture import QuadRupture
-from shakemap.grind.rupture import EdgeRupture
-from shakemap.grind.origin import Origin
-from shakemap.utils.timeutils import ShakeDateTime
+from shakelib.grind.rupture import QuadRupture
+from shakelib.grind.rupture import EdgeRupture
+from shakelib.grind.origin import Origin
+#from shakelib.utils.timeutils import ShakeDateTime
+from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
 from scenarios.utils import get_event_id
 from scenarios.utils import get_rupture_edges
