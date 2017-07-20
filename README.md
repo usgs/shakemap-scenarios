@@ -33,7 +33,7 @@ COMCAT is still handled with ShakeMap 3.5.
 
 Dependencies
 ------------
-* Shakemap 3.5: http://usgs.github.io/shakemap/manual_index.html
+* ShakeMap 3.5: http://usgs.github.io/shakemap/manual_index.html
 * The python dependencies are the same as ShakeMap 4.0, so use the setup_env.sh
   script from here: https://github.com/usgs/shakemap
 
@@ -67,11 +67,14 @@ rupture (extracted from US_MT_2016.json):
     ]
 }
 ```
+If you create a rupture set for scenarios, I would like to archive them in this
+repository. So please send it in as a pull request or email the file to me. 
 
 ### Input Directories
 
-The `mkinputdir` command line program will generate an input directory for each of the
-events in a rupture set. The arguments are explained with the help message:
+The `mkinputdir` command line program will generate an input directory for
+each of the events in a rupture set. The arguments are explained with the help
+message:
 ```
 $ mkinputdir -h
 usage: mkinputdir [-h] [-f FILE] [-r REFERENCE] [-d {-1,0,1,2}]
@@ -100,9 +103,50 @@ optional arguments:
                         ~/ShakeMap.
 ```
 A few things to note:
-- This is where you would set the directivity option if needed.
+- This is where directivity is seleccted if needed.
 - The resulting input directories will use the current time/date as the
   time/date for the scenario by default. This can be edited in the resulting
   event.xml file if required by the scenario exercise.
 
+### Grid Calculations
 
+The `runscenarios` command line program will calculate the ground motion grids
+for all of events in the current ShakeMap data directory, which is basically
+just a wrapper around the `mkscenariogrids` program that runs on an individual
+event directory. I usually use `runscenarios` because I don't keep old event
+directories around in the data directory, and when I re-run things, I usually
+do the full set all at once. Some key things that need to be set in either
+of these programs are:
+* Vs30 grid file
+* What GMPE to use. Currently this only supports the NSHMP GMPE sets/weights,
+  but it is easy to add new ones, or use a single GMPE.
+* `runscenarios` has an additional argument for the number of processors to use.
+  If you are running a large number of events, it will run them in parallel, but
+  the the code is not written to parallelize the calculations within a single
+  scenario.
+
+### Run ShakeMap 3.5
+The input directories now have all the required files, as well as the
+*estimates.grd and *sd.grd files. So ShakeMap 3.5 is run to generate the various
+products that are transferred to COMCAT.
+
+Note that I have not written a command line argument for doing this, but there
+is a helper method `run_one_old_shakemap` in this repository. Here is a python
+script that uses this to run ShakeMap 3.5 on all of the events in the current
+data directory:
+```
+import os
+from scenarios.utils import run_one_old_shakemap
+from impactutils.io.cmd import get_command_output
+# Arguments
+datadir = '/Users/emthompson/shake/data'
+id_str = next(os.walk(datadir))[1]
+n = len(id_str)
+logs = [None]*n
+for i in range(0, n):
+    logs[i] = run_one_old_shakemap(id_str[i], shakehome = '/Users/emthompson/shake')
+
+```
+Note: just running shakemap without this helper function probably will not work.
+Also, if anything goes wrong, the list of logs can be helpful for
+troubleshooting.
