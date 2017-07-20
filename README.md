@@ -32,11 +32,10 @@ of products (e.g., maps, shapefiles, etc.) and transferring of the products to
 COMCAT is still handled with ShakeMap 3.5.
 
 Dependencies
------------------------
-
-    - Shakemap 3.5: http://usgs.github.io/shakemap/manual_index.html
-    - The python dependencies are the same as ShakeMap 4.0, so use the setup_env.sh
-      script from here: https://github.com/usgs/shakemap
+------------
+* Shakemap 3.5: http://usgs.github.io/shakemap/manual_index.html
+* The python dependencies are the same as ShakeMap 4.0, so use the setup_env.sh
+  script from here: https://github.com/usgs/shakemap
 
 Workflow
 --------
