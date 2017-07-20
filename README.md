@@ -1,4 +1,5 @@
-# shakemap-scenarios
+shakemap-scenarios
+==================
 
 **Disclaimer:**
 
@@ -11,7 +12,8 @@ constitute any such warranty. The software is provided on the condition that
 neither the USGS nor the U.S. Government shall be held liable for any damages 
 resulting from the authorized or unauthorized use of the software.
 
-## Overview
+Overview
+--------
 
 Running a scenario is very different than running real events for a few reasons:
     - There isn't any data to be concerned about
@@ -29,16 +31,15 @@ repository only handles the generation of the ground motion grids. The generaito
 of products (e.g., maps, shapefiles, etc.) and transferring of the products to
 COMCAT is still handled with ShakeMap 3.5.
 
-## Non-Python Dependencies
+Dependencies
+-----------------------
 
     - Shakemap 3.5: http://usgs.github.io/shakemap/manual_index.html
+    - The python dependencies are the same as ShakeMap 4.0, so use the setup_env.sh
+      script from here: https://github.com/usgs/shakemap
 
-## Python Dependencies
-
-    - Same as ShakeMap 4.0, so use the setup_env.sh script from here:
-      https://github.com/usgs/shakemap
-
-## Workflow
+Workflow
+--------
 
 Generally, we start with sceanrio sources defined in JSON files. The subdirectory
 "rupture_sets" includes a few examples. Note that there is more than one accepable
