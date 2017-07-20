@@ -40,6 +40,8 @@ Dependencies
 Workflow
 --------
 
+### Rupture Set
+
 Generally, we start with sceanrio sources defined in JSON files. The subdirectory
 "rupture_sets" includes a few examples. Note that there is more than one accepable
 format for the rupture sets because different sources of ruptures use different
@@ -65,4 +67,42 @@ rupture (extracted from US_MT_2016.json):
     ]
 }
 ```
+
+### Input Directories
+
+The `mkinputdir` command line program will generate an input directory for each of the
+events in a rupture set. The arguments are explained with the help message:
+```
+$ mkinputdir -h
+usage: mkinputdir [-h] [-f FILE] [-r REFERENCE] [-d {-1,0,1,2}]
+                  [-i [INDEX [INDEX ...]]] [-s SHAKEHOME]
+
+Create ShakeMap input directory. This is designed primarily to be used with an
+input file that provides rupture information. Currently, this only supports
+the BSSC2014 JSON format. TODO: * Add support for NSHM XML format * Add
+support for Excel rupture template * prompt for minimal info if file is not
+provided
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f FILE, --file FILE  File with rupture information.
+  -r REFERENCE, --reference REFERENCE
+                        Reference for rupture source.
+  -d {-1,0,1,2}, --dirind {-1,0,1,2}
+                        Directivity; -1 for no directivity (default); 0 and 2
+                        are the two opposing unilateral directions, 1 is for
+                        bilateral.
+  -i [INDEX [INDEX ...]], --index [INDEX [INDEX ...]]
+                        List of rupture indices to run. Useful if you do not
+                        want to run all ruptures in the file.
+  -s SHAKEHOME, --shakehome SHAKEHOME
+                        the location of ShakeMap install; default is
+                        ~/ShakeMap.
+```
+A few things to note:
+- This is where you would set the directivity option if needed.
+- The resulting input directories will use the current time/date as the
+  time/date for the scenario by default. This can be edited in the resulting
+  event.xml file if required by the scenario exercise.
+
 

@@ -88,8 +88,7 @@ if __name__ == '__main__':
       * prompt for minimal info if file is not provided
     '''
     parser = argparse.ArgumentParser(description=desc)
-    fh = 'File with rupture information; currently only BSSC2014 JSON format; '\
-         'Future: USGS NSHM xml format and Excel rupture template.'
+    fh = 'File with rupture information.'
     parser.add_argument('-f', '--file', help=fh)
     parser.add_argument('-r', '--reference', help='Reference for rupture source.',
                         default='')
