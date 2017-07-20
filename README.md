@@ -43,14 +43,14 @@ Workflow
 ### Paths
 You need to configure some paths in a conf file. Create a file in the user home
 directory named `.scenarios.conf` with the following contents:
-```
+```python
 [scenarios]
-catalog=mt2016
-shakehome=/home/shake/ShakeMap
-vs30file=/home/shake/vs30.grd
-pdlbin=/home/shake/ProductClient/ProductClient.jar
-key=/home/shake/ProductClient/key
-pdlconf=/home/shake/ProductClient/config.ini
+    catalog=mt2016
+    shakehome=/home/shake/ShakeMap
+    vs30file=/home/shake/vs30.grd
+    pdlbin=/home/shake/ProductClient/ProductClient.jar
+    key=/home/shake/ProductClient/key
+    pdlconf=/home/shake/ProductClient/config.ini
 ```
 
 
@@ -61,7 +61,7 @@ Generally, we start with sceanrio sources defined in JSON files. The subdirector
 format for the rupture sets because different sources of ruptures use different
 representations. Here is an example rupture set JSON file with only a single simple
 rupture (extracted from US_MT_2016.json):
-```
+```json
 {
     "name": "2016 Montanta Scenarios",
     "info": "Derived by expert opinion with input from Michael Stickney, Kathy Haller.",
@@ -146,7 +146,7 @@ Note that I have not written a command line argument for doing this, but there
 is a helper method `run_one_old_shakemap` in this repository. Here is a python
 script that uses this to run ShakeMap 3.5 on all of the events in the current
 data directory:
-```
+```python
 import os
 from configobj import ConfigObj
 from scenarios.utils import run_one_old_shakemap
@@ -187,7 +187,7 @@ really delete anything. It is extremely difficult to fix._
 
 Unlike for older scenarios, we now have to also send an origin. Here is a script
 that sends origins for all of the events in the data directory:
-```
+```python
 import os
 from scenarios.utils import send_origin
 from configobj import ConfigObj
