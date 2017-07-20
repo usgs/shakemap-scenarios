@@ -40,6 +40,20 @@ Dependencies
 Workflow
 --------
 
+### Paths
+You need to configure some paths in a conf file. Create a file in the user home
+directory named `.scenarios.conf` with the following contents:
+```
+[scenarios]
+catalog=mt2016
+shakehome=/home/shake/ShakeMap
+vs30file=/home/shake/vs30.grd
+pdlbin=/home/shake/ProductClient/ProductClient.jar
+key=/home/shake/ProductClient/key
+pdlconf=/home/shake/ProductClient/config.ini
+```
+
+
 ### Rupture Set
 
 Generally, we start with sceanrio sources defined in JSON files. The subdirectory
@@ -53,17 +67,17 @@ rupture (extracted from US_MT_2016.json):
     "info": "Derived by expert opinion with input from Michael Stickney, Kathy Haller.",
     "events":
     [
-	{
-	    "id":"greatfalls_se",
-	    "desc":"Great Falls",
-	    "mag":6.01,
-	    "width":12.3,
-	    "dip":90,
-	    "rake":0,
-	    "ztor":1.0,
-	    "lats":[47.542, 47.499],
-	    "lons":[-111.435, -111.406]
-	}
+        {
+            "id":"greatfalls_se",
+            "desc":"Great Falls",
+            "mag":6.01,
+            "width":12.3,
+            "dip":90,
+            "rake":0,
+            "ztor":1.0,
+            "lats":[47.542, 47.499],
+            "lons":[-111.435, -111.406]
+        }
     ]
 }
 ```
@@ -98,11 +112,10 @@ optional arguments:
   -i [INDEX [INDEX ...]], --index [INDEX [INDEX ...]]
                         List of rupture indices to run. Useful if you do not
                         want to run all ruptures in the file.
-  -s SHAKEHOME, --shakehome SHAKEHOME
-                        the location of ShakeMap install; default is
-                        ~/ShakeMap.
 ```
 A few things to note:
+- The `-f` argument is the only required one, but since the `argparse` support
+  in python is terrible, it is listed as option. 
 - This is where directivity is seleccted if needed.
 - The resulting input directories will use the current time/date as the
   time/date for the scenario by default. This can be edited in the resulting
@@ -115,11 +128,9 @@ for all of events in the current ShakeMap data directory, which is basically
 just a wrapper around the `mkscenariogrids` program that runs on an individual
 event directory. I usually use `runscenarios` because I don't keep old event
 directories around in the data directory, and when I re-run things, I usually
-do the full set all at once. Some key things that need to be set in either
-of these programs are:
-* Vs30 grid file
-* What GMPE to use. Currently this only supports the NSHMP GMPE sets/weights,
-  but it is easy to add new ones, or use a single GMPE.
+do the full set all at once. Some key things to note:
+* This is where you set what GMPE to use. Currently this only supports the NSHMP
+  GMPE sets/weights, but it is easy to add new ones, or use a single GMPE.
 * `runscenarios` has an additional argument for the number of processors to use.
   If you are running a large number of events, it will run them in parallel, but
   the the code is not written to parallelize the calculations within a single
@@ -128,7 +139,8 @@ of these programs are:
 ### Run ShakeMap 3.5
 The input directories now have all the required files, as well as the
 *estimates.grd and *sd.grd files. So ShakeMap 3.5 is run to generate the various
-products that are transferred to COMCAT.
+products that are transferred to COMCAT. This runs ShakeMap 3.5 up through
+`genex` but does not run `transfer`. 
 
 Note that I have not written a command line argument for doing this, but there
 is a helper method `run_one_old_shakemap` in this repository. Here is a python
@@ -136,17 +148,56 @@ script that uses this to run ShakeMap 3.5 on all of the events in the current
 data directory:
 ```
 import os
+from configobj import ConfigObj
 from scenarios.utils import run_one_old_shakemap
 from impactutils.io.cmd import get_command_output
-# Arguments
-datadir = '/Users/emthompson/shake/data'
+config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+datadir = os.path.join(config['scenarios']['shakehome'], 'data')
 id_str = next(os.walk(datadir))[1]
 n = len(id_str)
 logs = [None]*n
 for i in range(0, n):
-    logs[i] = run_one_old_shakemap(id_str[i], shakehome = '/Users/emthompson/shake')
+    logs[i] = run_one_old_shakemap(id_str[i])
 
 ```
 Note: just running shakemap without this helper function probably will not work.
 Also, if anything goes wrong, the list of logs can be helpful for
 troubleshooting.
+
+### Transfer
+
+**IMPORTANT:** Be sure to double/triple check that the catalog code is correct in
+`[SHAKEHOME]/config/transfer.conf`. For catalog code `BSSC2014`, this is what the
+pertinent section of the conf file should look like:
+```
+pdl_java : /usr/bin/java
+pdl_client : /home/shake/ProductClient/ProductClient.jar
+pdl_source : us
+pdl_type : shakemap
+pdl_scenariotype : shakemap-scenario
+pdl_code : bssc2014<EVENT>
+pdl_eventsource : bssc2014
+pdl_eventsourcecode : <EVENT>
+pdl_privatekey : /home/shake/ProductClient/comcat_atlaskey
+pdl_config: /home/shake/ProductClient/scenarioconfig.ini
+```
+_If you mess this up, it creates havoc in COMCAT because of the complex nature of
+assocition, the lack of our ability to manually un-associate, and that we cannot
+really delete anything. It is extremely difficult to fix._
+
+Unlike for older scenarios, we now have to also send an origin. Here is a script
+that sends origins for all of the events in the data directory:
+```
+import os
+from scenarios.utils import send_origin
+from configobj import ConfigObj
+from impactutils.io.cmd import get_command_output
+config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+datadir = os.path.join(config['scenarios']['shakehome'], 'data')
+id_str = next(os.walk(datadir))[1]
+n = len(id_str)
+logs = [None]*n
+for i in range(0, n):
+    logs[i] = send_origin(id_str[i])
+
+```

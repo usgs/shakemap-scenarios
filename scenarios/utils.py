@@ -5,10 +5,12 @@ import json
 import argparse
 import copy
 import shutil
+import ast
 
 import numpy as np
 from lxml import etree
 import xml.etree.ElementTree as ET
+from configobj import ConfigObj
 
 from shapely.geometry import Polygon
 from shapely.geometry import Point
@@ -485,7 +487,7 @@ def get_rupture_edges(q, rev = None):
     edges = [topp, botp]
     return edges
 
-def run_one_old_shakemap(eventid, shakehome, genex = True):
+def run_one_old_shakemap(eventid, genex = True):
     """
     Convenience method for running old (v 3.5) shakemap with new estimates. This
     allows for us to generate all the products with the old code since the new 
@@ -494,7 +496,6 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
 
     Args:
         eventid (srt): Specifies the id of the event to process. 
-        shakehome (srt): Path to the home directory of the ShakeMap3.5 install.
         genex (bool): Should genex be run?
 
     Returns:
@@ -502,6 +503,8 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
             calls. 
         
     """
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+    shakehome = config['scenarios']['shakehome']
     log = {}
     shakebin = os.path.join(shakehome, 'bin')
     datadir = os.path.join(shakehome, 'data')
@@ -601,4 +604,122 @@ def run_one_old_shakemap(eventid, shakehome, genex = True):
         log['genex'] = {'rc':rc, 'so':so, 'se':se}
 
     return log
+
+def send_origin(eventid):
+    """
+    Args:
+        eventid (str): Event id. 
+
+    Returns:
+        dict: transfer logs.
+
+    """
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+    shakehome = config['scenarios']['shakehome']
+    pdlbin = config['scenarios']['pdlbin']
+    key = config['scenarios']['key']
+    pdlconf = config['scenarios']['pdlconf']
+    catalog = config['scenarios']['catalog']
+    
+    shakebin = os.path.join(shakehome, 'bin')
+    datadir = os.path.join(shakehome, 'data')
+    xmlfile = os.path.join(datadir, eventid, 'input','event.xml')
+    eventdict = read_event_xml(xmlfile)
+    short_name = eventdict['locstring'] # locstring in event.xml
+    if eventdict['eventsourcecode'] is None:
+        eventsourcecode = eventid
+    else:
+        eventsourcecode = eventdict['eventsourcecode']
+    lat = eventdict['lat']
+    lon = eventdict['lon']
+    depth = eventdict['depth']
+    magnitude = eventdict['mag']
+    sdt = eventdict['sdt']
+    
+    send_origin = \
+      'java -jar ' + pdlbin + ' --send ' + \
+      '--configFile=' + pdlconf + ' ' + \
+      '--privateKey=' + key + ' ' + \
+      '\"--property-title=' + short_name + '\" ' + \
+      '--source=us ' + \
+      '--eventsource=' + catalog + ' ' + \
+      '--code=' + catalog + eventid + ' ' + \
+      '--eventsourcecode=' + eventsourcecode + ' ' + \
+      '--type=origin-scenario ' + \
+      '--latitude=' + str(lat) + ' ' + \
+      '--longitude=' + str(lon) + ' ' + \
+      '--magnitude=' + str(magnitude) + ' ' + \
+      '--depth=' + str(depth) + ' ' + \
+      '--eventtime=' + sdt.strftime('%Y-%m-%dT%H:%M:%SZ')
+    rc,so,se = get_command_output(send_origin)
+    return {'rc':rc, 'so':so, 'se':se}
+
+
+def read_event_xml(file):
+    """
+    Read event.xml. 
+
+    Args:
+        file (str): Path to event.xml file.
+
+    Returns:
+        dict: Dictionary with event info.
+
+    """
+    eventtree = ET.parse(file)
+    eventroot = eventtree.getroot()
+    for eq in eventroot.iter('earthquake'):
+        id_str = eq.attrib['id']
+        magnitude = float(eq.attrib['mag'])
+        hlat = float(eq.attrib['lat'])
+        hlon = float(eq.attrib['lon'])
+        hdepth = float(eq.attrib['depth'])
+        if 'rake' in eq.attrib.keys():
+            rake = float(eq.attrib['rake'])
+        else:
+            rake = None
+        lstring = eq.attrib['locstring']
+        if 'description' in eq.attrib.keys():
+            description = eq.attrib['description']
+        else:
+            description = ""
+        if 'type' in eq.attrib.keys():
+            mech = eq.attrib['type']
+        else:
+            mech = "ALL"
+        year = int(eq.attrib['year'])
+        month = int(eq.attrib['month'])
+        day = int(eq.attrib['day'])
+        hour = int(eq.attrib['hour'])
+        minute = int(eq.attrib['minute'])
+        second = int(eq.attrib['second'])
+        if 'directivity' in eq.attrib.keys():
+            directivity = ast.literal_eval(eq.attrib['directivity'])
+        else:
+            directivity = False
+        if 'eventsourcecode' in eq.attrib.keys():
+            eventsourcecode = eq.attrib['eventsourcecode']
+        else:
+            eventsourcecode = None
+
+    sdt = ShakeDateTime(year, month, day, hour, minute, second, int(0))
+
+    event = {'lat': hlat,
+             'lon': hlon,
+             'depth': hdepth,
+             'mag': magnitude,
+             'rake': rake,
+             'id': id_str,
+             'locstring': lstring,
+             'type': mech,
+             'mech': mech,
+             'time': sdt.strftime('%Y-%m-%dT%H:%M:%SZ'),
+             'timezone': 'UTC',
+             'directivity':directivity,
+             'description':description,
+             'eventsourcecode':eventsourcecode,
+             'sdt':sdt}
+
+    return event
+
 

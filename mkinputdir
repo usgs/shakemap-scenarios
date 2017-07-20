@@ -5,6 +5,7 @@ import time
 import json
 import argparse
 from lxml import etree
+from configobj import ConfigObj
 
 from scenarios.input_output import parse_bssc2014_ucerf
 from scenarios.input_output import parse_json
@@ -14,10 +15,8 @@ from scenarios.input_output import write_event_xml
 
 
 def main(args):
-    if args.shakehome:
-        shakehome = args.shakehome
-    else:
-        shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+    shakehome = config['scenarios']['shakehome']
 
     # Open rupture file
     rfile = args.file
@@ -88,8 +87,8 @@ if __name__ == '__main__':
       * prompt for minimal info if file is not provided
     '''
     parser = argparse.ArgumentParser(description=desc)
-    fh = 'File with rupture information.'
-    parser.add_argument('-f', '--file', help=fh)
+    parser.add_argument('-f', '--file', help='File with rupture information.',
+                        required=True)
     parser.add_argument('-r', '--reference', help='Reference for rupture source.',
                         default='')
     parser.add_argument('-d', '--dirind',
@@ -101,13 +100,10 @@ if __name__ == '__main__':
                         help='List of rupture indices to run. Useful if you do '\
                         'not want to run all ruptures in the file.',
                         nargs='*')
-    shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
-    parser.add_argument(
-        '-s', '--shakehome',
-        help='the location of ShakeMap install; default is %s.' % shakehome)
     args = parser.parse_args()
     if args.dirind == -1:
         args.directivity = False
     else:
         args.directivity = True
     main(args)
+
