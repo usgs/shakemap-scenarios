@@ -16,20 +16,20 @@ Overview
 --------
 
 Running a scenario is very different than running real events for a few reasons:
-    - There isn't any data to be concerned about
-    - The date/time doesn't really matter unless required for a specific
-      exercise
-    - Transfering to COMCAT requires a different set
-    - Scenarios are organized in COMCAT by scenario catalogs, and each catalog
-      needs to have an associated "catalog page" on the earthquake website that
-      describes how the scenarios are created
+* There isn't any data to be concerned about
+* The date/time doesn't really matter unless required for a specific
+  exercise
+* Transferring to COMCAT requires a different set
+* Scenarios are organized in COMCAT by scenario catalogs, and each catalog
+  needs to have an associated "catalog page" on the earthquake website that
+  describes how the scenarios are created
 
 In the future, all of this will be run within Python in ShakeMap 4.0. However,
 this code was created to address some issues that could not be handled in the
 current version of ShakeMap, such as the use of multiple GMPEs, and the
 inclusion of new GMPEs that are not available in ShakeMap 3.5. However, the code
 in this repository only handles the generation of the ground motion grids. The
-generaiton of products (e.g., maps, shapefiles, etc.) and transferring of the
+generation of products (e.g., maps, shapefiles, etc.) and transferring of the
 products to COMCAT is still handled with ShakeMap 3.5.
 
 Dependencies
@@ -57,14 +57,14 @@ pdlconf=/home/shake/ProductClient/config.ini
 
 ### Rupture Set
 
-Generally, we start with sceanrio sources defined in JSON files. The subdirectory
+Generally, we start with scenario sources defined in JSON files. The subdirectory
 "rupture_sets" includes a few examples. Note that there is more than one
-accepable format for the rupture sets because different sources of ruptures use
+acceptable format for the rupture sets because different sources of ruptures use
 different representations. Here is an example rupture set JSON file with only a
 single simple rupture (extracted from US_MT_2016.json):
 ```json
 {
-    "name": "2016 Montanta Scenarios",
+    "name": "2016 Montana Scenarios",
     "info": "Derived by expert opinion with input from Michael Stickney, Kathy Haller.",
     "events":
     [
@@ -96,10 +96,7 @@ usage: mkinputdir [-h] [-f FILE] [-r REFERENCE] [-d {-1,0,1,2}]
                   [-i [INDEX [INDEX ...]]] [-s SHAKEHOME]
 
 Create ShakeMap input directory. This is designed primarily to be used with an
-input file that provides rupture information. Currently, this only supports
-the BSSC2014 JSON format. TODO: * Add support for NSHM XML format * Add
-support for Excel rupture template * prompt for minimal info if file is not
-provided
+input file that provides rupture information.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -117,7 +114,7 @@ optional arguments:
 A few things to note:
 * The `-f` argument is the only required one, but since the python `argparse`
   package is terrible, it is listed as optional. 
-* This is where directivity is seleccted if needed.
+* This is where directivity is selected if needed.
 * The resulting input directories will use the current time/date as the
   time/date for the scenario by default. This can be edited in the resulting
   event.xml file if required by the scenario exercise.
@@ -183,7 +180,7 @@ pdl_privatekey : /home/shake/ProductClient/comcat_atlaskey
 pdl_config: /home/shake/ProductClient/scenarioconfig.ini
 ```
 _If you mess this up, it creates havoc in COMCAT because of the complex nature
-of assocition, the lack of our ability to manually un-associate, and that we
+of association, the lack of our ability to manually un-associate, and that we
 cannot really delete anything. It is extremely difficult to fix._
 
 Unlike for older scenarios, we now have to also send an origin. Here is a script
