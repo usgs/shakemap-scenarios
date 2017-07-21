@@ -44,14 +44,14 @@ Workflow
 ### Paths
 You need to configure some paths in a conf file. Create a file in the user home
 directory named `.scenarios.conf` with the following contents:
-```python
+```ini
 [scenarios]
-    catalog=mt2016
-    shakehome=/home/shake/ShakeMap
-    vs30file=/home/shake/vs30.grd
-    pdlbin=/home/shake/ProductClient/ProductClient.jar
-    key=/home/shake/ProductClient/key
-    pdlconf=/home/shake/ProductClient/config.ini
+catalog=mt2016
+shakehome=/home/shake/ShakeMap
+vs30file=/home/shake/vs30.grd
+pdlbin=/home/shake/ProductClient/ProductClient.jar
+key=/home/shake/ProductClient/key
+pdlconf=/home/shake/ProductClient/config.ini
 ```
 
 
@@ -115,10 +115,10 @@ optional arguments:
                         want to run all ruptures in the file.
 ```
 A few things to note:
-- The `-f` argument is the only required one, but since the `argparse` support
-  in python is terrible, it is listed as option. 
-- This is where directivity is seleccted if needed.
-- The resulting input directories will use the current time/date as the
+* The `-f` argument is the only required one, but since the python `argparse`
+  package is terrible, it is listed as optional. 
+* This is where directivity is seleccted if needed.
+* The resulting input directories will use the current time/date as the
   time/date for the scenario by default. This can be edited in the resulting
   event.xml file if required by the scenario exercise.
 
@@ -151,7 +151,6 @@ data directory:
 import os
 from configobj import ConfigObj
 from scenarios.utils import run_one_old_shakemap
-from impactutils.io.cmd import get_command_output
 config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
 datadir = os.path.join(config['scenarios']['shakehome'], 'data')
 id_str = next(os.walk(datadir))[1]
@@ -161,8 +160,8 @@ for i in range(0, n):
     logs[i] = run_one_old_shakemap(id_str[i])
 
 ```
-Note: just running shakemap without this helper function probably will not work.
-Also, if anything goes wrong, the list of logs can be helpful for
+Note: just running ShakeMap 3.5 programs without this helper function probably
+will not work. Also, if anything goes wrong, the list of logs can be helpful for
 troubleshooting.
 
 ### Transfer
