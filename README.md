@@ -3,13 +3,13 @@ shakemap-scenarios
 
 **Disclaimer:**
 
->This software is preliminary or provisional and is subject to revision. It is 
-being provided to meet the need for timely best science. The software has not 
-received final approval by the U.S. Geological Survey (USGS). No warranty, 
-expressed or implied, is made by the USGS or the U.S. Government as to the 
-functionality of the software and related material nor shall the fact of release 
-constitute any such warranty. The software is provided on the condition that 
-neither the USGS nor the U.S. Government shall be held liable for any damages 
+>This software is preliminary or provisional and is subject to revision. It is
+being provided to meet the need for timely best science. The software has not
+received final approval by the U.S. Geological Survey (USGS). No warranty,
+expressed or implied, is made by the USGS or the U.S. Government as to the
+functionality of the software and related material nor shall the fact of release
+constitute any such warranty. The software is provided on the condition that
+neither the USGS nor the U.S. Government shall be held liable for any damages
 resulting from the authorized or unauthorized use of the software.
 
 Overview
@@ -17,7 +17,8 @@ Overview
 
 Running a scenario is very different than running real events for a few reasons:
     - There isn't any data to be concerned about
-    - The date/time doesn't really matter unless required for a specific exercise
+    - The date/time doesn't really matter unless required for a specific
+      exercise
     - Transfering to COMCAT requires a different set
     - Scenarios are organized in COMCAT by scenario catalogs, and each catalog
       needs to have an associated "catalog page" on the earthquake website that
@@ -25,11 +26,11 @@ Running a scenario is very different than running real events for a few reasons:
 
 In the future, all of this will be run within Python in ShakeMap 4.0. However,
 this code was created to address some issues that could not be handled in the
-current version of ShakeMap, such as the use of multiple GMPEs, and the inclusion
-of new GMPEs that are not available in ShakeMap 3.5. However, the code in this
-repository only handles the generation of the ground motion grids. The generaiton
-of products (e.g., maps, shapefiles, etc.) and transferring of the products to
-COMCAT is still handled with ShakeMap 3.5.
+current version of ShakeMap, such as the use of multiple GMPEs, and the
+inclusion of new GMPEs that are not available in ShakeMap 3.5. However, the code
+in this repository only handles the generation of the ground motion grids. The
+generaiton of products (e.g., maps, shapefiles, etc.) and transferring of the
+products to COMCAT is still handled with ShakeMap 3.5.
 
 Dependencies
 ------------
@@ -57,10 +58,10 @@ directory named `.scenarios.conf` with the following contents:
 ### Rupture Set
 
 Generally, we start with sceanrio sources defined in JSON files. The subdirectory
-"rupture_sets" includes a few examples. Note that there is more than one accepable
-format for the rupture sets because different sources of ruptures use different
-representations. Here is an example rupture set JSON file with only a single simple
-rupture (extracted from US_MT_2016.json):
+"rupture_sets" includes a few examples. Note that there is more than one
+accepable format for the rupture sets because different sources of ruptures use
+different representations. Here is an example rupture set JSON file with only a
+single simple rupture (extracted from US_MT_2016.json):
 ```json
 {
     "name": "2016 Montanta Scenarios",
@@ -166,9 +167,10 @@ troubleshooting.
 
 ### Transfer
 
-**IMPORTANT:** Be sure to double/triple check that the catalog code is correct in
-`[SHAKEHOME]/config/transfer.conf`. For catalog code `BSSC2014`, this is what the
-pertinent section of the conf file should look like:
+**IMPORTANT:** Be sure to double/triple check that the catalog code is correct
+in `[SHAKEHOME]/config/transfer.conf`, which is specified in __two__ places. For
+catalog code `BSSC2014`, this is what the pertinent section of the conf file
+should look like:
 ```
 pdl_java : /usr/bin/java
 pdl_client : /home/shake/ProductClient/ProductClient.jar
@@ -181,9 +183,9 @@ pdl_eventsourcecode : <EVENT>
 pdl_privatekey : /home/shake/ProductClient/comcat_atlaskey
 pdl_config: /home/shake/ProductClient/scenarioconfig.ini
 ```
-_If you mess this up, it creates havoc in COMCAT because of the complex nature of
-assocition, the lack of our ability to manually un-associate, and that we cannot
-really delete anything. It is extremely difficult to fix._
+_If you mess this up, it creates havoc in COMCAT because of the complex nature
+of assocition, the lack of our ability to manually un-associate, and that we
+cannot really delete anything. It is extremely difficult to fix._
 
 Unlike for older scenarios, we now have to also send an origin. Here is a script
 that sends origins for all of the events in the data directory:
@@ -201,3 +203,30 @@ for i in range(0, n):
     logs[i] = send_origin(id_str[i])
 
 ```
+
+To send the associated ShakeMap, we simply construct a call to the ShakeMap 3.5
+`transfer` program:
+```python
+import os
+from configobj import ConfigObj
+from impactutils.io.cmd import get_command_output
+config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+datadir = os.path.join(config['scenarios']['shakehome'], 'data')
+shakebin = os.path.join(config['scenarios']['shakehome'], 'bin')
+id_str = next(os.walk(datadir))[1]
+n = len(id_str)
+logs = [None]*n
+for i in range(n):
+    calltransfer = shakebin + '/transfer -event ' + id_str[i] + ' -pdl -scenario'
+    logs[i] = get_command_output(calltransfer)
+```
+
+Sometimes it is difficult to know if the transfer has succeeded because of
+caching. The logs are meant to help. It can also be helpful to know the caching
+rules:
+
+| Event age         | Cache time |
+| ----------------- | ---------- |
+| 7 days or less    | 1 min      |
+| 30 days or less   | 15 min     |
+| More than 30 days | 1 day      |
