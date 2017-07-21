@@ -31,6 +31,47 @@ from shakelib.grind.rupture import EdgeRupture
 from shakelib.grind.rupture import QuadRupture
 
 
+def set_shakehome(path):
+    """
+    Helper function for managing shakehome in the scenario conf file. 
+    This is needed when running tests. 
+
+    Args:
+        path (str): Path to shakehome.
+
+    Returns:
+        str: Previous shakehome, which can be used to restor to previous
+             config.
+    """
+    conf_file = os.path.join(os.path.expanduser('~'), '.scenarios.conf')
+    config = ConfigObj(conf_file)
+    old_shakehome = config['scenarios']['shakehome']
+    config['scenarios']['shakehome'] = path
+    # Note: Output filename is retained and is an attribute: config.filename
+    config.write()
+    return old_shakehome
+    
+def set_vs30file(path):
+    """
+    Helper function for managing vs30file in the scenario conf file. 
+    This is needed when running tests. 
+
+    Args:
+        path (str): Path to vs30file.
+
+    Returns:
+        str: Previous vs30file, which can be used to restor to previous
+             config.
+    """
+    conf_file = os.path.join(os.path.expanduser('~'), '.scenarios.conf')
+    config = ConfigObj(conf_file)
+    old_vs30file = config['scenarios']['vs30file']
+    config['scenarios']['vs30file'] = path
+    # Note: Output filename is retained and is an attribute: config.filename
+    config.write()
+    return old_vs30file
+    
+
 def find_rupture(pattern, file):
     """
     Convenience method for finding name and index of a rupture based on pattern

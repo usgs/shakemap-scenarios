@@ -78,13 +78,7 @@ def main(args):
 if __name__ == '__main__':
     desc = '''
     Create ShakeMap input directory. This is designed primarily to be used with
-    an input file that provides rupture information. Currently, this only 
-    supports the BSSC2014 JSON format. 
-    
-    TODO: 
-      * Add support for NSHM XML format
-      * Add support for Excel rupture template
-      * prompt for minimal info if file is not provided
+    an input file that provides rupture information. 
     '''
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-f', '--file', help='File with rupture information.',

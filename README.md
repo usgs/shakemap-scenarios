@@ -92,7 +92,7 @@ each of the events in a rupture set. The arguments are explained with the help
 message:
 ```
 $ mkinputdir -h
-usage: mkinputdir [-h] [-f FILE] [-r REFERENCE] [-d {-1,0,1,2}]
+usage: mkinputdir [-h] -f FILE [-r REFERENCE] [-d {-1,0,1,2}]
                   [-i [INDEX [INDEX ...]]] [-s SHAKEHOME]
 
 Create ShakeMap input directory. This is designed primarily to be used with an
@@ -112,8 +112,8 @@ optional arguments:
                         want to run all ruptures in the file.
 ```
 A few things to note:
-* The `-f` argument is the only required one, but since the python `argparse`
-  package is terrible, it is listed as optional. 
+* The `-f` argument is the only required one, but the python `argparse` lists
+  it as optional.
 * This is where directivity is selected if needed.
 * The resulting input directories will use the current time/date as the
   time/date for the scenario by default. This can be edited in the resulting

@@ -11,6 +11,8 @@ import tempfile
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
 
+from scenarios.utils import set_shakehome, set_vs30file
+
 homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
 shakedir = os.path.abspath(os.path.join(homedir, '..'))
 sys.path.insert(0, shakedir)
@@ -24,6 +26,7 @@ def test_pisgah_bullion_mtn(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
+    old_shakedir = set_shakehome(p)
     jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
@@ -35,7 +38,7 @@ def test_pisgah_bullion_mtn(tmpdir):
     #---------------------------------------------------------------------------
 
     # Run mkinputdir
-    cmd = 'mkinputdir -f %s -i 46 -s %s' % (jsonfile, p)
+    cmd = 'mkinputdir -f %s -i 46' % jsonfile
     rc,so,se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
@@ -56,8 +59,7 @@ def test_pisgah_bullion_mtn(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = os.path.join(shakedir, 'tests/data/SCalVs30.grd')
-    cmd = 'mkscenariogrids -e %s -g nshmp14_acr -r 0.1 '\
-          '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
+    cmd = 'mkscenariogrids -e pisgahbullionmtnmesq_m7p27_se -g nshmp14_acr -r 0.1'
     rc,so,se = get_command_output(cmd)
 
 
@@ -111,7 +113,9 @@ def test_pisgah_bullion_mtn(tmpdir):
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target, rtol = rtol)
 
-    shutil.rmtree(p)
+    # Clean up
+    set_shakehome(old_shakedir)
+#    shutil.rmtree(p)
 
 
 def test_pisgah_bullion_mtn_shallow(tmpdir):
@@ -122,6 +126,7 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
+    old_shakedir = set_shakehome(p)
     jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
@@ -133,7 +138,7 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     #---------------------------------------------------------------------------
 
     # Run mkinputdir
-    cmd = 'mkinputdir -f %s -i 46 -s %s' % (jsonfile, p)
+    cmd = 'mkinputdir -f %s -i 46' % jsonfile
     rc,so,se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
@@ -156,8 +161,7 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = os.path.join(shakedir, 'tests/data/SCalVs30.grd')
-    cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
-          '-v %s -s %s' %('pisgahbullionmtnmesq_m7p27_se', v, p)
+    cmd = 'mkscenariogrids -e pisgahbullionmtnmesq_m7p27_se -g nshmp14_shallow -r 0.1'
     rc,so,se = get_command_output(cmd)
 
     # Check output files
@@ -210,7 +214,9 @@ def test_pisgah_bullion_mtn_shallow(tmpdir):
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target, rtol = rtol)
 
-    shutil.rmtree(p)
+    # Clean up
+    set_shakehome(old_shakedir)
+#    shutil.rmtree(p)
 
 
 if __name__ == "__main__":

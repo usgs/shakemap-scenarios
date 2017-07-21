@@ -11,6 +11,8 @@ import tempfile
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import cmp
 
+from scenarios.utils import set_shakehome, set_vs30file
+
 homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
 shakedir = os.path.abspath(os.path.join(homedir, '..'))
 sys.path.insert(0, shakedir)
@@ -21,6 +23,9 @@ def test_charlevoix_0(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
+    old_shakedir = set_shakehome(p)
+    v = os.path.join(shakedir, 'tests/data/CharlevoixVs30.grd')
+    old_vs30file = set_vs30file(v)
     jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/bssc2014_ceus.json')
 
     # directory holding test and target data for this event
@@ -32,7 +37,7 @@ def test_charlevoix_0(tmpdir):
     #---------------------------------------------------------------------------
 
     # Run mkinputdir
-    cmd = 'mkinputdir -f %s -i 0 -s %s' % (jsonfile, p)
+    cmd = 'mkinputdir -f %s -i 0 ' % jsonfile
     rc,so,se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
@@ -53,9 +58,7 @@ def test_charlevoix_0(tmpdir):
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    v = os.path.join(shakedir, 'tests/data/CharlevoixVs30.grd')
-    cmd = 'mkscenariogrids -e %s -g nshmp14_scr_rlme -r 0.1 '\
-          '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
+    cmd = 'mkscenariogrids -e charlevoix_0_m7p_se -g nshmp14_scr_rlme -r 0.1 '
     rc,so,se = get_command_output(cmd)
 
 
@@ -108,9 +111,12 @@ def test_charlevoix_0(tmpdir):
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
 
+    # Clean up
+    set_shakehome(old_shakedir)
+    set_vs30file(old_vs30file)
     shutil.rmtree(p)
 
-def test_charlevoix_0_shallow(tmpdir):
+def charlevoix_0_shallow(tmpdir):
     # Same as previous test, but grids are computed with the "shallow" option
     # rather than specifying the GMPE set
 
@@ -118,6 +124,9 @@ def test_charlevoix_0_shallow(tmpdir):
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
+    old_shakedir = set_shakehome(p)
+    v = os.path.join(shakedir, 'tests/data/CharlevoixVs30.grd')
+    old_vs30file = set_vs30file(v)
     jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/bssc2014_ceus.json')
 
     # directory holding test and target data for this event
@@ -129,7 +138,7 @@ def test_charlevoix_0_shallow(tmpdir):
     #---------------------------------------------------------------------------
 
     # Run mkinputdir
-    cmd = 'mkinputdir -f %s -i 0 -s %s' % (jsonfile, p)
+    cmd = 'mkinputdir -f %s -i 0' % jsonfile
     rc,so,se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
@@ -150,9 +159,7 @@ def test_charlevoix_0_shallow(tmpdir):
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    v = os.path.join(shakedir, 'tests/data/CharlevoixVs30.grd')
-    cmd = 'mkscenariogrids -e %s -g nshmp14_shallow -r 0.1 '\
-          '-v %s -s %s' %('charlevoix_0_m7p_se', v, p)
+    cmd = 'mkscenariogrids -e charlevoix_0_m7p_se -g nshmp14_shallow -r 0.1 '
     rc,so,se = get_command_output(cmd)
 
 
@@ -205,14 +212,18 @@ def test_charlevoix_0_shallow(tmpdir):
     test = os.path.join(testinput, 'psa30_sd.grd')
     cmp(test, target)
 
-    shutil.rmtree(p)
+    # Clean up
+    set_shakehome(old_shakedir)
+    set_vs30file(old_vs30file)
+#    shutil.rmtree(p)
 
 
 
 
 if __name__ == "__main__":
-    td = tempfile.TemporaryDirectory()
-    test_charlevoix_0(td.name)
-    test_charlevoix_0_shallow(td.name)
+    td1 = tempfile.TemporaryDirectory()
+    td2 = tempfile.TemporaryDirectory()
+    test_charlevoix_0(td1.name)
+    test_charlevoix_0_shallow(td2.name)
 
 
