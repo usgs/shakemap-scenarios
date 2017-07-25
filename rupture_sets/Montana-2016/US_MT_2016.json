@@ -1,6 +1,7 @@
 {
     "name": "2016 Montana Scenarios",
     "info": "Derived by expert opinion with input from Michael Stickney, Kathy Haller (Great Falls deagg).",
+    "format":"nshmp",
     "events":
     [
 	{

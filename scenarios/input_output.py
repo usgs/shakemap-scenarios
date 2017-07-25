@@ -7,6 +7,7 @@ from lxml import etree
 
 import openquake.hazardlib.geo as geo
 
+from shakelib.grind.rupture import json_to_rupture
 from shakelib.grind.rupture import QuadRupture
 from shakelib.grind.rupture import EdgeRupture
 from shakelib.grind.origin import Origin
@@ -231,7 +232,7 @@ def parse_bssc2014_ucerf(rupts, args):
 
     return rlist
     
-def parse_json(rupts, args):
+def parse_json_nshmp(rupts, args):
     """
     This will hopefully be the most general json format for rutpures.
     Assumes top of ruputure is horizontal and continuous, and that
@@ -258,6 +259,7 @@ def parse_json(rupts, args):
         iter = range(nrup)
 
     for i in iter:
+
         event_name = rupts['events'][i]['desc']
         short_name = event_name.split('.xls')[0]
         id = rupts['events'][i]['id']
@@ -342,7 +344,7 @@ def parse_json(rupts, args):
 
     return rlist
 
-def parse_json_sub(rupts, args):
+def parse_json_nshmp_sub(rupts, args):
     """
     This is an alternative version of parse_json to use with the Cascadia
     subduction zone JSON rupture file. 
@@ -443,3 +445,92 @@ def parse_json_sub(rupts, args):
 
     return rlist
 
+def parse_json_shakemap(rupts, args):
+    """
+    This parses a json format that is basically a list of rupture.json formats,
+    are multipolygon features, and very similar to the ShakeMap 3.5 fault file
+    format. In this format, each corner is specified.
+
+    Todo:
+
+        - Support specification without a rupture (PointRupture).
+
+    Args:
+        rupts (dict): Python translation of rupture json file using json.load 
+            method.
+        args (ArgumentParser): argparse object. 
+
+    Returns:
+        dict: Dictionary of rupture information.
+
+    """
+    rlist = []
+    nrup = len(rupts['events'])
+
+    if args.index:
+        iter = args.index
+        iter = map(int, iter)
+    else:
+        iter = range(nrup)
+
+    for i in iter:
+
+        event_name = rupts['events'][i]['metadata']['locstring']
+        short_name = rupts['events'][i]['metadata']['locstring']
+        id = rupts['events'][i]['metadata']['id']
+        magnitude = rupts['events'][i]['metadata']['mag']
+        if 'rake' in rupts['events'][i]['metadata'].keys():
+            rake = rupts['events'][i]['metadata']['rake']
+        else:
+            rake = None
+
+        # Does the event include a rupture model?
+        if rupts['events'][i]['features'][0]['geometry']['type'] == \
+           "MultiPolygon":
+
+            # Dummy origin
+            origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
+            rupt = json_to_rupture(rupts['events'][i], origin)
+
+            quads = rupt.getQuadrilaterals()
+            edges = get_rupture_edges(quads) # for hypo placement
+            hlat, hlon, hdepth = get_hypo(edges, args)
+        else:
+            rupt = None
+            edges = None
+            hlat = float(rupts['events'][i]['metadata']['lat'])
+            hlon = float(rupts['events'][i]['metadata']['lon'])
+
+        id_str, eventsourcecode, real_desc = get_event_id(
+            event_name, magnitude, args.directivity, args.dirind,
+            quads, id = id)
+
+        event = {'lat': hlat,
+                 'lon': hlon,
+                 'depth': hdepth,
+                 'mag': magnitude,
+                 'rake':rake,
+                 'id': id_str,
+                 'locstring': event_name,
+                 'type': 'ALL',
+                 'timezone': 'UTC',
+                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 }
+
+        # Update rupture with new origin info
+        if rupt is not None:
+            origin = Origin(event)
+            rupt = json_to_rupture(rupts['events'][i], origin)
+
+        rdict = {'rupture':rupt,
+                 'event':event,
+                 'edges':edges,
+                 'id_str':id_str,
+                 'short_name':short_name,
+                 'real_desc':real_desc,
+                 'eventsourcecode':eventsourcecode
+                }
+        rlist.append(rdict)
+
+    return rlist

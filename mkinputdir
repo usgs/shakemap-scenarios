@@ -8,8 +8,9 @@ from lxml import etree
 from configobj import ConfigObj
 
 from scenarios.input_output import parse_bssc2014_ucerf
-from scenarios.input_output import parse_json
-from scenarios.input_output import parse_json_sub
+from scenarios.input_output import parse_json_nshmp
+from scenarios.input_output import parse_json_nshmp_sub
+from scenarios.input_output import parse_json_shakemap
 from scenarios.input_output import write_rupture_files
 from scenarios.input_output import write_event_xml
 
@@ -25,18 +26,17 @@ def main(args):
         nrup = len(rupts['events'])
         print('Total number of ruptures: %d' % nrup)
 
-    if rupts['name'] == '2014 NSHMP Determinisitc Event Set':
-        rlist = parse_bssc2014_ucerf(rupts, args)
-    elif (rupts['name'] == '2014 NSHMP Determinisitc Event Set WUS outside CA') or\
-         (rupts['name'] == '2014 NSHMP Determinisitc Event Set CEUS'):
-        rlist = parse_json(rupts, args)
-    elif rupts['name'] == '2014 NSHMP Determinisitc Event Set Cascadia':
-        rlist = parse_json_sub(rupts, args)
-    elif rupts['name'] == '2016 Montanta Scenarios':
-        rlist = parse_json(rupts, args)
-    else:
-        raise Exception('Unknown rupture file type.')
 
+    if rupts['format'].lower() == 'ucerf':
+        rlist = parse_bssc2014_ucerf(rupts, args)
+    elif rupts['format'].lower() == 'nshmp':
+        rlist = parse_json_nshmp(rupts, args)
+    elif rupts['format'].lower() == 'nshmp_sub':
+        rlist = parse_json_nshmp_sub(rupts, args)
+    elif rupts['format'].lower() == 'shakemap':
+        rlist = parse_json_shakemap(rupts, args)
+    else:
+        raise Exception('Unknown rupture file format.')
 
     nrup = len(rlist)
 
