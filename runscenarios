@@ -3,6 +3,7 @@
 import os
 import sys
 import argparse
+from configobj import ConfigObj
 
 import numpy as np
 
@@ -12,21 +13,22 @@ from impactutils.io.cmd import get_command_output
 def run_one(event, args):
     print('> %s' % event)
     cmd = 'mkscenariogrids -e ' + event + \
-          ' -v ' + args.vs30 + \
           ' -g ' + args.gmpe + \
           ' -m ' + str(args.max) + \
-          ' -r ' + str(args.res) + \
-          ' -s ' + args.shakehome
+          ' -r ' + str(args.res)
     rc, so, se = get_command_output(cmd)
     if rc is False:
         raise Exception(se)
 
 
 def main(args):
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+    shakehome = config['scenarios']['shakehome']
+
     #----------------------------------------------------
     # Get list of existing events
     #----------------------------------------------------
-    cmd = 'ls ' + os.path.join(args.shakehome, "data")
+    cmd = 'ls ' + os.path.join(shakehome, "data")
     rc, so, se = get_command_output(cmd)
     events = so.decode().split("\n")
 
@@ -60,8 +62,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
         '-n', '--nproc', help='Number of processors.', type=int)
-    parser.add_argument('-v', '--vs30',
-                        help='Specifies the path to the Vs30 grid to use.')
     parser.add_argument(
         '-g', '--gmpe', default='nshmp14_shallow',
         help='Select GMPE(s). Note that nshmp14_shalllow automatically selects '\
@@ -77,8 +77,5 @@ if __name__ == '__main__':
                         help='Maximum number of cells allowed; '
                         'resolution is adjusted to ensure this number is not exceeded; '
                         'default is 500,000.')
-    shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
-    parser.add_argument('-s', '--shakehome',
-                        help='the location of ShakeMap install; default is %s.' % shakehome)
     args = parser.parse_args()
     main(args)

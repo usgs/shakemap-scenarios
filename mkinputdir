@@ -5,6 +5,7 @@ import time
 import json
 import argparse
 from lxml import etree
+from configobj import ConfigObj
 
 from scenarios.input_output import parse_bssc2014_ucerf
 from scenarios.input_output import parse_json
@@ -14,10 +15,8 @@ from scenarios.input_output import write_event_xml
 
 
 def main(args):
-    if args.shakehome:
-        shakehome = args.shakehome
-    else:
-        shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+    shakehome = config['scenarios']['shakehome']
 
     # Open rupture file
     rfile = args.file
@@ -79,18 +78,11 @@ def main(args):
 if __name__ == '__main__':
     desc = '''
     Create ShakeMap input directory. This is designed primarily to be used with
-    an input file that provides rupture information. Currently, this only 
-    supports the BSSC2014 JSON format. 
-    
-    TODO: 
-      * Add support for NSHM XML format
-      * Add support for Excel rupture template
-      * prompt for minimal info if file is not provided
+    an input file that provides rupture information. 
     '''
     parser = argparse.ArgumentParser(description=desc)
-    fh = 'File with rupture information; currently only BSSC2014 JSON format; '\
-         'Future: USGS NSHM xml format and Excel rupture template.'
-    parser.add_argument('-f', '--file', help=fh)
+    parser.add_argument('-f', '--file', help='File with rupture information.',
+                        required=True)
     parser.add_argument('-r', '--reference', help='Reference for rupture source.',
                         default='')
     parser.add_argument('-d', '--dirind',
@@ -102,13 +94,10 @@ if __name__ == '__main__':
                         help='List of rupture indices to run. Useful if you do '\
                         'not want to run all ruptures in the file.',
                         nargs='*')
-    shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
-    parser.add_argument(
-        '-s', '--shakehome',
-        help='the location of ShakeMap install; default is %s.' % shakehome)
     args = parser.parse_args()
     if args.dirind == -1:
         args.directivity = False
     else:
         args.directivity = True
     main(args)
+

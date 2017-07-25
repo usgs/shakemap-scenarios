@@ -6,6 +6,7 @@ import warnings
 
 import numpy as np
 from collections import OrderedDict
+from configobj import ConfigObj
 
 #-------------------------------------------------------------------------------
 # Openquake utilities
@@ -35,15 +36,18 @@ from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
 from scenarios.utils import is_stable
 from scenarios.utils import get_extent
-from scenarios.input_output import read_event_xml
+from scenarios.utils import read_event_xml
 
+
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
 
 def main(args):
     id_str = args.event
-    if args.shakehome:
-        shakehome = args.shakehome
-    else:
-        shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
+
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
+    shakehome = config['scenarios']['shakehome']
+
     datdir = os.path.join(shakehome, 'data')
     evt_dir = os.path.join(datdir, id_str)
     input_dir = os.path.join(evt_dir, 'input')
@@ -164,7 +168,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Vs30 stuff
     #---------------------------------------------------------------------------
-    vs30filename = args.vs30
+    vs30filename = config['scenarios']['vs30file']
     vs30grid = GMTGrid.load(vs30filename, smdict, resample=True)
 
     vs30geodict = vs30grid.getGeoDict()
@@ -258,7 +262,11 @@ def main(args):
     #---------------------------------------------------------------------------
     # Directivity
     #---------------------------------------------------------------------------
-    if bool(origin.directivity) is True:
+    if isinstance(origin.directivity, str):
+        dirbool = str2bool(origin.directivity)
+    else:
+        dirbool = origin.directivity
+    if dirbool is True:
         R13 = Rowshandel2013.fromSites(
             origin, rupt, sites, dx=1.0, T=[1.0, 3.0],
             a_weight=0.5, mtype=1)
@@ -270,13 +278,15 @@ def main(args):
     #---------------------------------------------------------------------------
     for key, val in imt_dict.items():
         iimt = imt.from_string(val)
+        if args.verbose is True:
+            print("IMT: %s" %val)
 
         # Get DualDistanceWeights instance for this imt
         ddw = DualDistanceWeights.from_set_name(set_name, iimt)
         lnmu, lnsd = ddw.get_mean_and_stddevs(
-                sx, rx, dx, iimt, stddev_types)
+            sx, rx, dx, iimt, stddev_types)
         lnmu_rock, lnsd_rock = ddw.get_mean_and_stddevs(
-                sx_rock, rx, dx, iimt, stddev_types)
+            sx_rock, rx, dx, iimt, stddev_types)
 
         #-----------------------------------------------------------------------
         # Handle directivity factors
@@ -285,7 +295,7 @@ def main(args):
         #       eventually available, need to move the sigma
         #       adjustment into this if-statement.
         #-----------------------------------------------------------------------
-        if bool(origin.directivity) is True:
+        if dirbool is True:
             if (key == 'pgv') | (key == 'psa10'):
                 fd = fd1
             elif (key == 'psa30'):
@@ -329,7 +339,7 @@ def main(args):
 
 
     # Also write directivity factors to a file
-    if bool(origin.directivity) is True:
+    if dirbool is True:
         fd1grd = GMTGrid(fd1, smdict)
         fd3grd = GMTGrid(fd3, smdict)
         fd1grd.save(os.path.join(input_dir, 'fd1.grd'))
@@ -339,8 +349,9 @@ def main(args):
     # MMI - Use VirtualIPE
     #---------------------------------------------------------------------------
     gmice = WGRW12()
+    ddw = DualDistanceWeights.from_set_name(set_name, imt.PGV())
     vipe = VirtualIPE.fromFuncs(ddw.mgmpe_small, gmice)
-    if bool(origin.directivity) is True:
+    if dirbool is True:
         mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
     else:
         mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types)
@@ -414,9 +425,6 @@ if __name__ == '__main__':
         '-e', '--event',
         help='Specifies the id of the event to process.')
     parser.add_argument(
-        '-v', '--vs30',
-        help='Specifies the path to the Vs30 grid to use.')
-    parser.add_argument(
         '-g', '--gmpe', default='nshmp14_shallow',
         help='Select GMPE(s). Note that nshmp14_shalllow automatically selects '\
              'between nshmp14_acr, nshmp14_scr_rlme, and nshmp14_scr_grd, but '\
@@ -433,10 +441,6 @@ if __name__ == '__main__':
         help='Maximum number of cells allowed; '
         'resolution is adjusted to ensure this number is not exceeded; '
         'default is 500,000.')
-    shakehome = os.path.join(os.path.expanduser('~'), 'ShakeMap')
-    parser.add_argument(
-        '-s', '--shakehome',
-        help='the location of ShakeMap install; default is %s.' % shakehome)
     parser.add_argument(
         '--mesh_dx', default=0.5, type=float,
         help='The resolution for rupture mesh in km; only used for EdgeRuptures; '\
@@ -449,3 +453,4 @@ if __name__ == '__main__':
         help = 'Add verbose output.')
     args = parser.parse_args()
     main(args)
+
