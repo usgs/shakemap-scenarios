@@ -9,9 +9,9 @@ import pytest
 import tempfile
 
 from impactutils.io.cmd import get_command_output
-from impactutils.testing.grd import cmp
+from impactutils.testing.grd import grdcmp
 
-from scenarios.utils import set_shakehome
+from scenarios.utils import set_shakehome, set_vs30file
 
 homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
 shakedir = os.path.abspath(os.path.join(homedir, '..'))
@@ -27,6 +27,8 @@ def test_mtdiablo(tmpdir):
     if not os.path.exists(p):
         os.makedirs(p)
     old_shakedir = set_shakehome(p)
+    v = os.path.join(shakedir, 'tests/data/NCalVs30.grd')
+    old_vs30file = set_vs30file(v)
     jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
@@ -69,54 +71,55 @@ def test_mtdiablo(tmpdir):
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
     test = os.path.join(testinput, 'mi_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'mi_sd.grd')
     test = os.path.join(testinput, 'mi_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pga_estimates.grd')
     test = os.path.join(testinput, 'pga_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pga_sd.grd')
     test = os.path.join(testinput, 'pga_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pgv_estimates.grd')
     test = os.path.join(testinput, 'pgv_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pgv_sd.grd')
     test = os.path.join(testinput, 'pgv_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa03_estimates.grd')
     test = os.path.join(testinput, 'psa03_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa03_sd.grd')
     test = os.path.join(testinput, 'psa03_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa10_estimates.grd')
     test = os.path.join(testinput, 'psa10_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa10_sd.grd')
     test = os.path.join(testinput, 'psa10_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa30_estimates.grd')
     test = os.path.join(testinput, 'psa30_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     # Clean up
     set_shakehome(old_shakedir)
+    set_vs30file(old_vs30file)
     shutil.rmtree(p)
 
 

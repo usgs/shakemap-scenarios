@@ -9,7 +9,7 @@ import pytest
 import tempfile
 
 from impactutils.io.cmd import get_command_output
-from impactutils.testing.grd import cmp
+from impactutils.testing.grd import grdcmp
 
 from scenarios.utils import set_shakehome, set_vs30file
 
@@ -65,58 +65,58 @@ def test_charlevoix_0(tmpdir):
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
     test = os.path.join(testinput, 'mi_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'mi_sd.grd')
     test = os.path.join(testinput, 'mi_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pga_estimates.grd')
     test = os.path.join(testinput, 'pga_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pga_sd.grd')
     test = os.path.join(testinput, 'pga_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pgv_estimates.grd')
     test = os.path.join(testinput, 'pgv_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pgv_sd.grd')
     test = os.path.join(testinput, 'pgv_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa03_estimates.grd')
     test = os.path.join(testinput, 'psa03_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa03_sd.grd')
     test = os.path.join(testinput, 'psa03_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa10_estimates.grd')
     test = os.path.join(testinput, 'psa10_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa10_sd.grd')
     test = os.path.join(testinput, 'psa10_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa30_estimates.grd')
     test = os.path.join(testinput, 'psa30_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     # Clean up
     set_shakehome(old_shakedir)
     set_vs30file(old_vs30file)
     shutil.rmtree(p)
 
-def charlevoix_0_shallow(tmpdir):
+def test_charlevoix_0_shallow(tmpdir):
     # Same as previous test, but grids are computed with the "shallow" option
     # rather than specifying the GMPE set
 
@@ -166,51 +166,51 @@ def charlevoix_0_shallow(tmpdir):
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
     test = os.path.join(testinput, 'mi_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'mi_sd.grd')
     test = os.path.join(testinput, 'mi_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pga_estimates.grd')
     test = os.path.join(testinput, 'pga_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pga_sd.grd')
     test = os.path.join(testinput, 'pga_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pgv_estimates.grd')
     test = os.path.join(testinput, 'pgv_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'pgv_sd.grd')
     test = os.path.join(testinput, 'pgv_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa03_estimates.grd')
     test = os.path.join(testinput, 'psa03_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa03_sd.grd')
     test = os.path.join(testinput, 'psa03_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa10_estimates.grd')
     test = os.path.join(testinput, 'psa10_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa10_sd.grd')
     test = os.path.join(testinput, 'psa10_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa30_estimates.grd')
     test = os.path.join(testinput, 'psa30_estimates.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     target = os.path.join(targetinput, 'psa30_sd.grd')
     test = os.path.join(testinput, 'psa30_sd.grd')
-    cmp(test, target)
+    grdcmp(test, target)
 
     # Clean up
     set_shakehome(old_shakedir)

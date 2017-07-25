@@ -278,13 +278,15 @@ def main(args):
     #---------------------------------------------------------------------------
     for key, val in imt_dict.items():
         iimt = imt.from_string(val)
+        if args.verbose is True:
+            print("IMT: %s" %val)
 
         # Get DualDistanceWeights instance for this imt
         ddw = DualDistanceWeights.from_set_name(set_name, iimt)
         lnmu, lnsd = ddw.get_mean_and_stddevs(
-                sx, rx, dx, iimt, stddev_types)
+            sx, rx, dx, iimt, stddev_types)
         lnmu_rock, lnsd_rock = ddw.get_mean_and_stddevs(
-                sx_rock, rx, dx, iimt, stddev_types)
+            sx_rock, rx, dx, iimt, stddev_types)
 
         #-----------------------------------------------------------------------
         # Handle directivity factors
@@ -347,6 +349,7 @@ def main(args):
     # MMI - Use VirtualIPE
     #---------------------------------------------------------------------------
     gmice = WGRW12()
+    ddw = DualDistanceWeights.from_set_name(set_name, imt.PGV())
     vipe = VirtualIPE.fromFuncs(ddw.mgmpe_small, gmice)
     if dirbool is True:
         mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
