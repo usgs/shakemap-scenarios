@@ -47,11 +47,11 @@ directory named `.scenarios.conf` with the following contents:
 ```ini
 [scenarios]
 catalog=mt2016
-shakehome=/home/shake/ShakeMap
-vs30file=/home/shake/vs30.grd
-pdlbin=/home/shake/ProductClient/ProductClient.jar
-key=/home/shake/ProductClient/key
-pdlconf=/home/shake/ProductClient/config.ini
+shakehome=/home/<user>/ShakeMap
+vs30file=/home/<user>/vs30.grd
+pdlbin=/home/<user>/ProductClient/ProductClient.jar
+key=/home/<user>/ProductClient/key
+pdlconf=/home/<user>/ProductClient/config.ini
 ```
 
 
@@ -66,6 +66,7 @@ single simple rupture (extracted from US_MT_2016.json):
 {
     "name": "2016 Montana Scenarios",
     "info": "Derived by expert opinion with input from Michael Stickney, Kathy Haller.",
+    "format":"nshmp",
     "events":
     [
         {
@@ -83,7 +84,10 @@ single simple rupture (extracted from US_MT_2016.json):
 }
 ```
 If you create a rupture set for scenarios, I would like to archive them in this
-repository. So please send it in as a pull request or email the file to me. 
+repository. So please send it in as a pull request or email the file to me.
+For more complex ruptures (e.g., multiple disconnected traces) or if you simply
+prefer to specify the lat/lon/depth of each quadrilateral corner, there is an
+example of how to to this in `rupture_sets/example.json`. 
 
 ### Input Directories
 
@@ -169,15 +173,15 @@ catalog code `BSSC2014`, this is what the pertinent section of the conf file
 should look like:
 ```
 pdl_java : /usr/bin/java
-pdl_client : /home/shake/ProductClient/ProductClient.jar
+pdl_client : /home/<user>/ProductClient/ProductClient.jar
 pdl_source : us
 pdl_type : shakemap
 pdl_scenariotype : shakemap-scenario
 pdl_code : bssc2014<EVENT>
 pdl_eventsource : bssc2014
 pdl_eventsourcecode : <EVENT>
-pdl_privatekey : /home/shake/ProductClient/comcat_atlaskey
-pdl_config: /home/shake/ProductClient/scenarioconfig.ini
+pdl_privatekey : /home/<user>/ProductClient/comcat_atlaskey
+pdl_config: /home/<user>/ProductClient/scenarioconfig.ini
 ```
 _If you mess this up, it creates havoc in COMCAT because of the complex nature
 of association, the lack of our ability to manually un-associate, and that we
