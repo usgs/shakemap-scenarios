@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/emthompson-usgs/shakemap-scenarios.svg?branch=master)](https://travis-ci.org/emthompson-usgs/shakemap-scenarios)
+[![Build Status](https://travis-ci.org/usgs/shakemap-scenarios.svg?branch=master)](https://travis-ci.org/usgs/shakemap-scenarios)
 
 
 shakemap-scenarios

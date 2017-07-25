@@ -1,0 +1,37 @@
+{
+    "name":"Example rupture set.",
+    "info":"Only contains an example point source rupture.",
+    "format":"shakemap",
+    "events":[
+        {
+            "metadata": {
+                "mech": "ALL",
+                "created": "2017-07-25T16:16:49Z",
+                "type": "ALL",
+                "rake": 90,
+                "id": "example_ps_se",
+                "mag": 6.67,
+                "lon": -121.8,
+                "lat": 37.8,
+                "depth": 13.0,
+                "time": "2017-07-25T16:16:49Z",
+                "locstring": "Example location",
+                "timezone": "UTC"
+            },
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "properties": {
+                        "rupture type": "point source",
+                        "reference": ""
+                    },
+                    "geometry": {
+                        "coordinates": [-121.8, 37.8, 13.0],
+                        "type": "Point"
+                    },
+                    "type": "Feature"
+                }
+            ]
+        }
+    ]
+}

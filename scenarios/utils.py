@@ -389,45 +389,46 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
     mag_str = mag_str.replace('.', 'p')
 
     # Get an 'average strike' from first quad to mean of trace
-    lat0 = [q[0].latitude for q in quads]
-    lon0 = [q[0].longitude for q in quads]
-    lat1 = [q[1].latitude for q in quads]
-    lon1 = [q[1].longitude for q in quads]
-    lat2 = [q[2].latitude for q in quads]
-    lon2 = [q[2].longitude for q in quads]
-    lat3 = [q[3].latitude for q in quads]
-    lon3 = [q[3].longitude for q in quads]
-    clat = np.mean(np.array([lat0, lat1, lat2, lat3]))
-    clon = np.mean(np.array([lon0, lon1, lon2, lon3]))
-    strike = geo.geodetic.azimuth(lon0[0], lat0[0], clon, clat)
-    squadrant = strike_to_quadrant(strike)
+    if quads is not None:
+        lat0 = [q[0].latitude for q in quads]
+        lon0 = [q[0].longitude for q in quads]
+        lat1 = [q[1].latitude for q in quads]
+        lon1 = [q[1].longitude for q in quads]
+        lat2 = [q[2].latitude for q in quads]
+        lon2 = [q[2].longitude for q in quads]
+        lat3 = [q[3].latitude for q in quads]
+        lon3 = [q[3].longitude for q in quads]
+        clat = np.mean(np.array([lat0, lat1, lat2, lat3]))
+        clon = np.mean(np.array([lon0, lon1, lon2, lon3]))
+        strike = geo.geodetic.azimuth(lon0[0], lat0[0], clon, clat)
+        squadrant = strike_to_quadrant(strike)
 
-    if directivity: 
-        dirtag = 'dir' + str(i_dir)
-    else:
-        dirtag = ''
+        if directivity: 
+            dirtag = 'dir' + str(i_dir)
+        else:
+            dirtag = ''
 
-    nq = len(quads)
-    if (i_dir == 0) and (directivity):
-        if squadrant == 1:
-            ddes = "Northern directivity"
-        if squadrant == 2:
-            ddes = "Eastern directivity"
-        if squadrant == 3:
-            ddes = "Southern directivity"
-        if squadrant == 4:
-            ddes = "Western directivity"
-    elif (i_dir == 1) or (not directivity):
-        ddes = "Bilateral directivity"
-    elif (i_dir == 2) and (directivity):
-        if squadrant == 1:
-            ddes = "Southern directivity"
-        if squadrant == 2:
-            ddes = "Western directivity"
-        if squadrant == 3:
-            ddes = "Northern directivity"
-        if squadrant == 4:
-            ddes = "Eastern directivity"
+        nq = len(quads)
+        if (i_dir == 0) and (directivity):
+            if squadrant == 1:
+                ddes = "Northern directivity"
+            if squadrant == 2:
+                ddes = "Eastern directivity"
+            if squadrant == 3:
+                ddes = "Southern directivity"
+            if squadrant == 4:
+                ddes = "Western directivity"
+        elif (i_dir == 1) or (not directivity):
+            ddes = "Bilateral directivity"
+        elif (i_dir == 2) and (directivity):
+            if squadrant == 1:
+                ddes = "Southern directivity"
+            if squadrant == 2:
+                ddes = "Western directivity"
+            if squadrant == 3:
+                ddes = "Northern directivity"
+            if squadrant == 4:
+                ddes = "Eastern directivity"
 
     if directivity:
         if id is None:
@@ -457,6 +458,7 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
             eventsourcecode = id
         else:
             eventsourcecode = "%s_M%s_se" % (id[:20], mag_str)
+        
 
     eventsourcecode = eventsourcecode.lower()
     return id_str, eventsourcecode, real_desc
