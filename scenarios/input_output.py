@@ -498,8 +498,10 @@ def parse_json_shakemap(rupts, args):
         else:
             rupt = None
             edges = None
-            hlat = float(rupts['events'][i]['metadata']['lat'])
-            hlon = float(rupts['events'][i]['metadata']['lon'])
+            quads  = None
+            hlon = float(rupts['events'][i]['features'][0]['geometry']['coordinates'][0])
+            hlat = float(rupts['events'][i]['features'][0]['geometry']['coordinates'][1])
+            hdepth = float(rupts['events'][i]['features'][0]['geometry']['coordinates'][2])
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind,
