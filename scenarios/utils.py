@@ -43,10 +43,10 @@ def set_shakehome(path):
         str: Previous shakehome, which can be used to restor to previous
              config.
     """
-    conf_file = os.path.join(os.path.expanduser('~'), '.scenarios.conf')
+    conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
     config = ConfigObj(conf_file)
-    old_shakehome = config['scenarios']['shakehome']
-    config['scenarios']['shakehome'] = path
+    old_shakehome = config['paths']['shakehome']
+    config['paths']['shakehome'] = path
     # Note: Output filename is retained and is an attribute: config.filename
     config.write()
     return old_shakehome
@@ -63,10 +63,10 @@ def set_vs30file(path):
         str: Previous vs30file, which can be used to restor to previous
              config.
     """
-    conf_file = os.path.join(os.path.expanduser('~'), '.scenarios.conf')
+    conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
     config = ConfigObj(conf_file)
-    old_vs30file = config['scenarios']['vs30file']
-    config['scenarios']['vs30file'] = path
+    old_vs30file = config['paths']['vs30file']
+    config['paths']['vs30file'] = path
     # Note: Output filename is retained and is an attribute: config.filename
     config.write()
     return old_vs30file
@@ -546,8 +546,8 @@ def run_one_old_shakemap(eventid, genex = True):
             calls. 
         
     """
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-    shakehome = config['scenarios']['shakehome']
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+    shakehome = config['paths']['shakehome']
     log = {}
     shakebin = os.path.join(shakehome, 'bin')
     datadir = os.path.join(shakehome, 'data')
@@ -657,12 +657,12 @@ def send_origin(eventid):
         dict: transfer logs.
 
     """
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-    shakehome = config['scenarios']['shakehome']
-    pdlbin = config['scenarios']['pdlbin']
-    key = config['scenarios']['key']
-    pdlconf = config['scenarios']['pdlconf']
-    catalog = config['scenarios']['catalog']
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+    shakehome = config['paths']['shakehome']
+    pdlbin = config['paths']['pdlbin']
+    key = config['paths']['key']
+    pdlconf = config['paths']['pdlconf']
+    catalog = config['grind']['catalog']
     
     shakebin = os.path.join(shakehome, 'bin')
     datadir = os.path.join(shakehome, 'data')

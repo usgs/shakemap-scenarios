@@ -22,8 +22,8 @@ def run_one(event, args):
 
 
 def main(args):
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-    shakehome = config['scenarios']['shakehome']
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+    shakehome = config['paths']['shakehome']
 
     #----------------------------------------------------
     # Get list of existing events

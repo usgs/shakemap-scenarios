@@ -3,6 +3,7 @@
 import os
 import argparse
 import warnings
+import pkg_resources
 
 import numpy as np
 from collections import OrderedDict
@@ -23,7 +24,7 @@ from shakelib.grind.rupture import read_rupture_file
 from shakelib.grind.origin import Origin
 from shakelib.grind.distance import Distance
 from shakelib.grind.sites import Sites
-from shakelib.grind.multigmpe import DualDistanceWeights
+from shakelib.grind.multigmpe import MultiGMPE
 from shakelib.grind.multigmpe import filter_gmpe_list
 from shakelib.grind.directivity.rowshandel2013 import Rowshandel2013
 #from shakelib.utils.timeutils import ShakeDateTime
@@ -45,8 +46,8 @@ def str2bool(v):
 def main(args):
     id_str = args.event
 
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-    shakehome = config['scenarios']['shakehome']
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+    shakehome = config['paths']['shakehome']
 
     datdir = os.path.join(shakehome, 'data')
     evt_dir = os.path.join(datdir, id_str)
@@ -81,29 +82,40 @@ def main(args):
     rupt._mesh_dx = args.mesh_dx
 
     #---------------------------------------------------------------------------
-    # Get DualDistanceWeights instance
+    # Construct the MultiGMPE
     #---------------------------------------------------------------------------
 
-    set_name = args.gmpe
-    if set_name == 'nshmp14_shallow':
-        # Select between SCR and ACR
-        stable = is_stable(origin.lon, origin.lat)
+    tmp = pkg_resources.resource_filename(
+        'scenarios', os.path.join('..', 'data', 'gmpe_sets.conf'))
+    config.merge(ConfigObj(tmp))
+    tmp = pkg_resources.resource_filename(
+        'scenarios', os.path.join('..', 'data', 'gmpe_modules.conf'))
+    config.merge(ConfigObj(tmp))
 
-        if stable is True:
-            # if SCR check for rupture
-            if rupt is None:
-                set_name = 'nshmp14_scr_grd'
-            else:
-                set_name = 'nshmp14_scr_rlme'
-        else:
-            set_name = 'nshmp14_acr'
-    ddw = DualDistanceWeights.from_set_name(set_name)
+    gmpe = MultiGMPE.from_config(config)
 
-    if args.verbose is True:
-        print('GMPE set: %s\n' %set_name)
+
+
+#    set_name = args.gmpe
+#    if set_name == 'nshmp14_shallow':
+#        # Select between SCR and ACR
+#        stable = is_stable(origin.lon, origin.lat)
+
+#        if stable is True:
+#            # if SCR check for rupture
+#            if rupt is None:
+#                set_name = 'nshmp14_scr_grd'
+#            else:
+#                set_name = 'nshmp14_scr_rlme'
+#        else:
+#            set_name = 'nshmp14_acr'
+#    gmpe = DualDistanceWeights.from_set_name(set_name)
+
+#    if args.verbose is True:
+#        print('GMPE set: %s\n' %set_name)
 
     # Need GMPE list for distances etc.
-    gmpes = ddw.mgmpe_small.GMPES
+#    gmpes = gmpe.mgmpe_small.GMPES
     # Note: Should make this union of small and large lists to be thorough. But
     #       this should have no practical implications since large distance sets
     #       are always a subset of small distance sets. 
@@ -156,7 +168,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Make rupture context
     #---------------------------------------------------------------------------
-    rx = rupt.getRuptureContext(gmpes)
+    rx = rupt.getRuptureContext(gmpe)
 
     if args.verbose is True:
         print('Rupture context:')
@@ -168,7 +180,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Vs30 stuff
     #---------------------------------------------------------------------------
-    vs30filename = config['scenarios']['vs30file']
+    vs30filename = config['paths']['vs30file']
     vs30grid = GMTGrid.load(vs30filename, smdict, resample=True)
 
     vs30geodict = vs30grid.getGeoDict()
@@ -220,7 +232,7 @@ def main(args):
         print('mesh_dx: %f\n' %rupt._mesh_dx)
 
     # Compute distances and site parameters on mesh.
-    dist = Distance(gmpes, lon, lat, dep, rupt)
+    dist = Distance(gmpe, lon, lat, dep, rupt)
     dx = dist.getDistanceContext()
 
     if args.verbose is True:
@@ -274,7 +286,7 @@ def main(args):
         fd3 = R13.getFd()[1]
 
     #---------------------------------------------------------------------------
-    # Evaluarte GMPEs
+    # Evaluate GMPEs
     #---------------------------------------------------------------------------
     for key, val in imt_dict.items():
         iimt = imt.from_string(val)
@@ -282,10 +294,10 @@ def main(args):
             print("IMT: %s" %val)
 
         # Get DualDistanceWeights instance for this imt
-        ddw = DualDistanceWeights.from_set_name(set_name, iimt)
-        lnmu, lnsd = ddw.get_mean_and_stddevs(
+#        gmpe = DualDistanceWeights.from_set_name(set_name, iimt)
+        lnmu, lnsd = gmpe.get_mean_and_stddevs(
             sx, rx, dx, iimt, stddev_types)
-        lnmu_rock, lnsd_rock = ddw.get_mean_and_stddevs(
+        lnmu_rock, lnsd_rock = gmpe.get_mean_and_stddevs(
             sx_rock, rx, dx, iimt, stddev_types)
 
         #-----------------------------------------------------------------------
@@ -349,8 +361,8 @@ def main(args):
     # MMI - Use VirtualIPE
     #---------------------------------------------------------------------------
     gmice = WGRW12()
-    ddw = DualDistanceWeights.from_set_name(set_name, imt.PGV())
-    vipe = VirtualIPE.fromFuncs(ddw.mgmpe_small, gmice)
+#    gmpe = DualDistanceWeights.from_set_name(set_name, imt.PGV())
+    vipe = VirtualIPE.fromFuncs(gmpe, gmice)
     if dirbool is True:
         mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
     else:

@@ -47,17 +47,54 @@ Workflow
 
 ### Paths
 You need to configure some paths in a conf file. Create a file in the user home
-directory named `.scenarios.conf` with the following contents:
+directory named `scenarios.conf` with the following contents:
 ```ini
-[scenarios]
-catalog=mt2016
-shakehome=/home/<user>/ShakeMap
-vs30file=/home/<user>/vs30.grd
-pdlbin=/home/<user>/ProductClient/ProductClient.jar
-key=/home/<user>/ProductClient/key
-pdlconf=/home/<user>/ProductClient/config.ini
-```
 
+[paths]
+    #---------------------------------------------------------------------------
+    # Base directory of shakemap 3.5 installation
+    #---------------------------------------------------------------------------
+    shakehome = /home/user/shake
+
+    #---------------------------------------------------------------------------
+    # Path to Vs30 grid
+    #---------------------------------------------------------------------------
+    vs30file = /home/user/data/Global_30_sec/global_vs30_ca_waor_ut_jp.grd
+
+    #---------------------------------------------------------------------------
+    # PDL paths
+    #---------------------------------------------------------------------------
+    pdlbin = /home/user/ProductClient/ProductClient.jar
+    key = /home/user/ProductClient/key
+    pdlconf = /home/user/ProductClient/scenarioconfig.ini
+
+[grind]
+    #---------------------------------------------------------------------------
+    # Catalog name, i.e., "eventsource"
+    #---------------------------------------------------------------------------
+    catalog = test
+
+    #---------------------------------------------------------------------------
+    # GMPE; found in openquake.hazardlib.gsim or specified in gmpe_sets.conf
+    #---------------------------------------------------------------------------
+    gmpe=active_crustal_nshmp2014
+
+    #---------------------------------------------------------------------------
+    # IPE; either VirtualIPE or found in shakelib.grind.ipe (does not yet exist)
+    #---------------------------------------------------------------------------
+    ipe=VirtualIPE
+
+    #---------------------------------------------------------------------------
+    # GMICE; found in shakelib.grind.gmice
+    #---------------------------------------------------------------------------
+    gmice = WGRW12
+
+    #---------------------------------------------------------------------------
+    # Intensity measure component (IMC); currently either "Larger" or "RotD50"
+    #---------------------------------------------------------------------------
+    component = Larger
+```
+Note that the `ipe` entry is currently a placeholder and cannot be changed.
 
 ### Rupture Set
 
@@ -156,8 +193,8 @@ data directory:
 import os
 from configobj import ConfigObj
 from scenarios.utils import run_one_old_shakemap
-config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-datadir = os.path.join(config['scenarios']['shakehome'], 'data')
+config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+datadir = os.path.join(config['paths']['shakehome'], 'data')
 id_str = next(os.walk(datadir))[1]
 n = len(id_str)
 logs = [None]*n
@@ -198,8 +235,8 @@ import os
 from scenarios.utils import send_origin
 from configobj import ConfigObj
 from impactutils.io.cmd import get_command_output
-config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-datadir = os.path.join(config['scenarios']['shakehome'], 'data')
+config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+datadir = os.path.join(config['paths']['shakehome'], 'data')
 id_str = next(os.walk(datadir))[1]
 n = len(id_str)
 logs = [None]*n
@@ -214,9 +251,9 @@ To send the associated ShakeMap, we simply construct a call to the ShakeMap 3.5
 import os
 from configobj import ConfigObj
 from impactutils.io.cmd import get_command_output
-config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-datadir = os.path.join(config['scenarios']['shakehome'], 'data')
-shakebin = os.path.join(config['scenarios']['shakehome'], 'bin')
+config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+datadir = os.path.join(config['paths']['shakehome'], 'data')
+shakebin = os.path.join(config['paths']['shakehome'], 'bin')
 id_str = next(os.walk(datadir))[1]
 n = len(id_str)
 logs = [None]*n
