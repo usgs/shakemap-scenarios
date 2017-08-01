@@ -7,7 +7,11 @@ import pkg_resources
 
 import numpy as np
 from collections import OrderedDict
-from configobj import ConfigObj
+from configobj import ConfigObj, flatten_errors
+from validate import Validator
+
+from shakemap.utils.config import get_config_paths, get_custom_validator,\
+        config_error
 
 #-------------------------------------------------------------------------------
 # Openquake utilities
@@ -45,8 +49,13 @@ def str2bool(v):
 
 def main(args):
     id_str = args.event
+    
+    spec_file = pkg_resources.resource_filename(
+        'scenarios', os.path.join('..', 'data', 'configspec.conf'))
+    validator = get_custom_validator()
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'),
+                       configspec=spec_file)
 
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
     shakehome = config['paths']['shakehome']
 
     datdir = os.path.join(shakehome, 'data')
@@ -82,43 +91,24 @@ def main(args):
     rupt._mesh_dx = args.mesh_dx
 
     #---------------------------------------------------------------------------
-    # Construct the MultiGMPE
+    # Construct the MultiGMPE, not specific/filtered to an IMT
     #---------------------------------------------------------------------------
 
     tmp = pkg_resources.resource_filename(
         'scenarios', os.path.join('..', 'data', 'gmpe_sets.conf'))
-    config.merge(ConfigObj(tmp))
+    config.merge(ConfigObj(tmp, configspec=spec_file))
     tmp = pkg_resources.resource_filename(
-        'scenarios', os.path.join('..', 'data', 'gmpe_modules.conf'))
-    config.merge(ConfigObj(tmp))
+        'scenarios', os.path.join('..', 'data', 'modules.conf'))
+    config.merge(ConfigObj(tmp, configspec=spec_file))
+    results = config.validate(validator)
+    if results != True:
+        config_error(config, results)
 
-    gmpe = MultiGMPE.from_config(config)
+    config = config.dict()
+
+    gmpe = MultiGMPE.from_config(config, verbose=args.verbose)
 
 
-
-#    set_name = args.gmpe
-#    if set_name == 'nshmp14_shallow':
-#        # Select between SCR and ACR
-#        stable = is_stable(origin.lon, origin.lat)
-
-#        if stable is True:
-#            # if SCR check for rupture
-#            if rupt is None:
-#                set_name = 'nshmp14_scr_grd'
-#            else:
-#                set_name = 'nshmp14_scr_rlme'
-#        else:
-#            set_name = 'nshmp14_acr'
-#    gmpe = DualDistanceWeights.from_set_name(set_name)
-
-#    if args.verbose is True:
-#        print('GMPE set: %s\n' %set_name)
-
-    # Need GMPE list for distances etc.
-#    gmpes = gmpe.mgmpe_small.GMPES
-    # Note: Should make this union of small and large lists to be thorough. But
-    #       this should have no practical implications since large distance sets
-    #       are always a subset of small distance sets. 
 
     #---------------------------------------------------------------------------
     # Compute extent, or get from args
@@ -293,8 +283,12 @@ def main(args):
         if args.verbose is True:
             print("IMT: %s" %val)
 
-        # Get DualDistanceWeights instance for this imt
-#        gmpe = DualDistanceWeights.from_set_name(set_name, iimt)
+        #-----------------------------------------------------------------------
+        # Re-construct the MultiGMPE, but specifcy the IMT so that it filters
+        # out GMPEs that cannot be evaluated at this IMT
+        #-----------------------------------------------------------------------
+        gmpe = MultiGMPE.from_config(config, filter_imt = iimt,
+                                     verbose=args.verbose)
         lnmu, lnsd = gmpe.get_mean_and_stddevs(
             sx, rx, dx, iimt, stddev_types)
         lnmu_rock, lnsd_rock = gmpe.get_mean_and_stddevs(
@@ -360,8 +354,9 @@ def main(args):
     #---------------------------------------------------------------------------
     # MMI - Use VirtualIPE
     #---------------------------------------------------------------------------
+    gmpe = MultiGMPE.from_config(config, filter_imt = imt.PGV(),
+                                 verbose=args.verbose)
     gmice = WGRW12()
-#    gmpe = DualDistanceWeights.from_set_name(set_name, imt.PGV())
     vipe = VirtualIPE.fromFuncs(gmpe, gmice)
     if dirbool is True:
         mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
@@ -381,7 +376,7 @@ def main(args):
 
     # Write GMPE set name to a file to put into info.json later
     gmpefile = open(os.path.join(input_dir, "gmpe_set_name.txt"), "w")
-    gmpefile.write(set_name)
+    gmpefile.write(gmpe.DESCRIPTION)
     gmpefile.close()
 
     # Need to write rock_grid.xml
@@ -408,11 +403,13 @@ def main(args):
                  'event_timestamp':datetime.utcnow(),
                  'event_network':'us',
                  'event_description':""}
+    #---------------------------------------------------------------------------
     # Note: cannot put standard deviations here becaus they go
     # into uncertainty.xml; in the current version of shakemap there
     # is no where to put rock grid standard deviations. We should
     # change this in the next udpate. The uncertainty here is based on
     # instrumental records and so it is not really meaningful for scenarios.
+    #---------------------------------------------------------------------------
     uncDict = {'pga':(0, 0),
                'pgv':(0, 0),
                'mmi':(0, 0),
@@ -428,23 +425,11 @@ if __name__ == '__main__':
     Create the ShakeMap *_estimates.grd and *_sd.grd files. Requires an input 
     directory with event.xml and rupture files; the inputs should be created by
     the 'mkinputdir' script or similar. 
-
-    Currently any GMPE set besides NSHMP14acr (or any combination of its 
-    constituent GMPEs) is likely to cause errors. 
     '''
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
-        '-e', '--event',
+        '-e', '--event', required=True,
         help='Specifies the id of the event to process.')
-    parser.add_argument(
-        '-g', '--gmpe', default='nshmp14_shallow',
-        help='Select GMPE(s). Note that nshmp14_shalllow automatically selects '\
-             'between nshmp14_acr, nshmp14_scr_rlme, and nshmp14_scr_grd, but '\
-             'this currently only works in US.',
-        choices=[
-            'nshmp14_shallow', 
-            'nshmp14_acr', 'nshmp14_scr_rlme', 'nshmp14_scr_grd',
-            'nshmp14_sub_i', 'nshmp14_sub_s'])
     parser.add_argument(
         '-r', '--res', default=30/60/60, type=float,
         help='The resolution in decimal degrees; default is 30/60/60.')
@@ -461,7 +446,7 @@ if __name__ == '__main__':
         '--extent', nargs='+', help='Extent: lonmin, latmin, lonmax, latmax.', 
         required=False, default=None, type=float)
     parser.add_argument(
-        '--verbose', action="store_true", default=False, 
+        '-v', '--verbose', action="store_true", default=False, 
         help = 'Add verbose output.')
     args = parser.parse_args()
     main(args)
