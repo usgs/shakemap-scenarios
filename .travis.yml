@@ -30,7 +30,7 @@ before_script:
     - "sh -e /etc/init.d/xvfb start"
     - sleep 3 # give xvfb some time to start
     # Put conf file in home directory
-    - cp .scenarios.conf ~/.
+    - cp data/scenarios.conf ~/.
 script:
     - export PYTHONPATH="."
     - py.test --cov=scenarios

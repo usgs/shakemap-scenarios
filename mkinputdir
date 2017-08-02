@@ -16,8 +16,8 @@ from scenarios.input_output import write_event_xml
 
 
 def main(args):
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-    shakehome = config['scenarios']['shakehome']
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+    shakehome = config['paths']['shakehome']
 
     # Open rupture file
     rfile = args.file
@@ -87,12 +87,12 @@ if __name__ == '__main__':
                         default='')
     parser.add_argument('-d', '--dirind',
                         help='Directivity; -1 for no directivity (default); 0 '\
-                        'and 2 are the two opposing unilateral directions, 1 '\
-                        'is for bilateral.',
+                            'and 2 are the two opposing unilateral directions,'\
+                            ' 1 is for bilateral.',
                         default=-1, type=int, choices=[-1, 0, 1, 2])
     parser.add_argument('-i', '--index',
                         help='List of rupture indices to run. Useful if you do '\
-                        'not want to run all ruptures in the file.',
+                            'not want to run all ruptures in the file.',
                         nargs='*')
     args = parser.parse_args()
     if args.dirind == -1:

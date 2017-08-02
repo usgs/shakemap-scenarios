@@ -11,7 +11,7 @@ import tempfile
 from impactutils.io.cmd import get_command_output
 from impactutils.testing.grd import grdcmp
 
-from scenarios.utils import set_shakehome, set_vs30file
+from scenarios.utils import set_shakehome, set_vs30file, set_gmpe
 
 homedir = os.path.dirname(os.path.abspath(__file__))  # where is this script?
 shakedir = os.path.abspath(os.path.join(homedir, '..'))
@@ -29,6 +29,7 @@ def test_mtdiablo(tmpdir):
     old_shakedir = set_shakehome(p)
     v = os.path.join(shakedir, 'tests/data/NCalVs30.grd')
     old_vs30file = set_vs30file(v)
+    old_gmpe = set_gmpe('active_crustal_nshmp2014')
     jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
@@ -64,7 +65,7 @@ def test_mtdiablo(tmpdir):
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = os.path.join(shakedir, 'tests/data/NCalVs30.grd')
-    cmd = 'mkscenariogrids -e mountdiablothrustell_m6p67_se -g nshmp14_acr -r 0.1 '
+    cmd = 'mkscenariogrids -e mountdiablothrustell_m6p67_se -r 0.1 '
     rc,so,se = get_command_output(cmd)
 
 
@@ -120,6 +121,7 @@ def test_mtdiablo(tmpdir):
     # Clean up
     set_shakehome(old_shakedir)
     set_vs30file(old_vs30file)
+    set_gmpe(old_gmpe)
     shutil.rmtree(p)
 
 

@@ -33,8 +33,7 @@ from shakelib.grind.rupture import QuadRupture
 
 def set_shakehome(path):
     """
-    Helper function for managing shakehome in the scenario conf file. 
-    This is needed when running tests. 
+    Helper function for managing shakehome in the scenario conf file.
 
     Args:
         path (str): Path to shakehome.
@@ -43,18 +42,16 @@ def set_shakehome(path):
         str: Previous shakehome, which can be used to restor to previous
              config.
     """
-    conf_file = os.path.join(os.path.expanduser('~'), '.scenarios.conf')
+    conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
     config = ConfigObj(conf_file)
-    old_shakehome = config['scenarios']['shakehome']
-    config['scenarios']['shakehome'] = path
-    # Note: Output filename is retained and is an attribute: config.filename
+    old_shakehome = config['paths']['shakehome']
+    config['paths']['shakehome'] = path
     config.write()
     return old_shakehome
-    
+
 def set_vs30file(path):
     """
-    Helper function for managing vs30file in the scenario conf file. 
-    This is needed when running tests. 
+    Helper function for managing vs30file in the scenario conf file.
 
     Args:
         path (str): Path to vs30file.
@@ -63,14 +60,30 @@ def set_vs30file(path):
         str: Previous vs30file, which can be used to restor to previous
              config.
     """
-    conf_file = os.path.join(os.path.expanduser('~'), '.scenarios.conf')
+    conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
     config = ConfigObj(conf_file)
-    old_vs30file = config['scenarios']['vs30file']
-    config['scenarios']['vs30file'] = path
-    # Note: Output filename is retained and is an attribute: config.filename
+    old_vs30file = config['paths']['vs30file']
+    config['paths']['vs30file'] = path
     config.write()
     return old_vs30file
-    
+
+def set_gmpe(gmpe):
+    """
+    Helper function for managing gmpe in the scenario conf file. 
+
+    Args:
+        gmpe (str): The designed OQ GMPE or name of GMPE set.
+
+    Returns:
+        str: Previous GMPE, which can be used to restor to previous
+             config.
+    """
+    conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
+    config = ConfigObj(conf_file)
+    old_gmpe = config['grind']['gmpe']
+    config['grind']['gmpe'] = gmpe
+    config.write()
+    return old_gmpe
 
 def find_rupture(pattern, file):
     """
@@ -546,8 +559,8 @@ def run_one_old_shakemap(eventid, genex = True):
             calls. 
         
     """
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-    shakehome = config['scenarios']['shakehome']
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+    shakehome = config['paths']['shakehome']
     log = {}
     shakebin = os.path.join(shakehome, 'bin')
     datadir = os.path.join(shakehome, 'data')
@@ -657,12 +670,12 @@ def send_origin(eventid):
         dict: transfer logs.
 
     """
-    config = ConfigObj(os.path.join(os.path.expanduser('~'), '.scenarios.conf'))
-    shakehome = config['scenarios']['shakehome']
-    pdlbin = config['scenarios']['pdlbin']
-    key = config['scenarios']['key']
-    pdlconf = config['scenarios']['pdlconf']
-    catalog = config['scenarios']['catalog']
+    config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
+    shakehome = config['paths']['shakehome']
+    pdlbin = config['paths']['pdlbin']
+    key = config['paths']['key']
+    pdlconf = config['paths']['pdlconf']
+    catalog = config['grind']['catalog']
     
     shakebin = os.path.join(shakehome, 'bin')
     datadir = os.path.join(shakehome, 'data')
