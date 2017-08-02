@@ -1,6 +1,5 @@
 import os
 import time
-import xml.etree.ElementTree as ET
 
 import numpy as np
 from lxml import etree
@@ -20,10 +19,9 @@ from scenarios.utils import get_hypo
 from scenarios.utils import rake_to_type
 
 
-
 def write_event_xml(input_dir, rdict, directivity):
     """
-    Write the event.xml file. 
+    Write the event.xml file.
 
     Args:
         input_dir (str): Path of input directory.
@@ -73,19 +71,19 @@ def write_event_xml(input_dir, rdict, directivity):
 
 def write_rupture_files(input_dir, rdict):
     """
-    Write rupture files for scenarios. 
+    Write rupture files for scenarios.
 
     Args:
-        input_dir (str): Path of event input directory. 
+        input_dir (str): Path of event input directory.
         rdict (dict): Rupture dictionary.
 
     """
     rupture = rdict['rupture']
 
     # Write rupture.json file
-    rupture.writeGeoJson(os.path.join(input_dir, 'rupture.json') )
+    rupture.writeGeoJson(os.path.join(input_dir, 'rupture.json'))
 
-    # No longer write the fault.txt file for calculations since it is 
+    # No longer write the fault.txt file for calculations since it is
     # better to use rupture.json
 
     # Still need to write a fault.txt file for ShakeMap 3.5 to display on maps
@@ -100,21 +98,21 @@ def write_rupture_files(input_dir, rdict):
         poly = coords[0][i]
         npts = len(poly)
         for j in range(npts):
-            ff.write('%.4f %.4f %.4f\n' %(poly[j][1], poly[j][0], poly[j][2]))
+            ff.write('%.4f %.4f %.4f\n' % (poly[j][1], poly[j][0], poly[j][2]))
         ff.write('>\n')
     ff.close()
 
 
 def parse_bssc2014_ucerf(rupts, args):
     """
-    This function is to parse the UCERF3 json file format. The ruptures in 
+    This function is to parse the UCERF3 json file format. The ruptures in
     UCERF3 are very complex and so we don't exepct to get other rupture lists
-    in this format. 
+    in this format.
 
     Args:
-        rupts (dict): Python translation of rupture json file using json.load 
-            method. 
-        args (ArgumentParser): argparse object. 
+        rupts (dict): Python translation of rupture json file using json.load
+            method.
+        args (ArgumentParser): argparse object.
 
     Returns:
         dict: Dictionary of rupture information.
@@ -169,7 +167,7 @@ def parse_bssc2014_ucerf(rupts, args):
             yp0_sec = top_sec_lat[range(0, n_sec_trace)]
             yp1_sec = top_sec_lat[range(1, n_sec_trace + 1)]
             zp_sec = top_sec_z[range(0, n_sec_trace)]
-            if rev_sec == False:
+            if rev_sec is False:
                 xp0 = np.append(xp0, xp0_sec)
                 xp1 = np.append(xp1, xp1_sec)
                 yp0 = np.append(yp0, yp0_sec)
@@ -185,10 +183,10 @@ def parse_bssc2014_ucerf(rupts, args):
             secind = secind + 1
 
         # Origin
-        origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
+        origin = Origin({'mag': 0, 'id': '', 'lat': 0, 'lon': 0, 'depth': 0})
         rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
                                      width_sec, dip_sec, origin, strike=strike_sec,
-                                     group_index = new_seg_ind,
+                                     group_index=new_seg_ind,
                                      reference=args.reference)
 
         quads = rupt.getQuadrilaterals()
@@ -202,48 +200,48 @@ def parse_bssc2014_ucerf(rupts, args):
                  'lon': hlon,
                  'depth': hdepth,
                  'mag': magnitude,
-                 'rake':rake,
+                 'rake': rake,
                  'id': id_str,
                  'locstring': event_name,
                  'type': 'ALL',
                  'timezone': 'UTC',
-                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
-                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
-                     }
+                 'time': ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created': ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 }
 
         # Update rupture with new origin info
         origin = Origin(event)
         rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
                                      width_sec, dip_sec, origin, strike=strike_sec,
-                                     group_index = new_seg_ind,
+                                     group_index=new_seg_ind,
                                      reference=args.reference)
 
-
-        rdict = {'rupture':rupt,
-                 'event':event,
-                 'edges':edges,
-                 'id_str':id_str,
-                 'short_name':short_name,
-                 'real_desc':real_desc,
-                 'eventsourcecode':eventsourcecode
-                }
+        rdict = {'rupture': rupt,
+                 'event': event,
+                 'edges': edges,
+                 'id_str': id_str,
+                 'short_name': short_name,
+                 'real_desc': real_desc,
+                 'eventsourcecode': eventsourcecode
+                 }
 
         rlist.append(rdict)
 
     return rlist
-    
+
+
 def parse_json_nshmp(rupts, args):
     """
     This will hopefully be the most general json format for rutpures.
     Assumes top of ruputure is horizontal and continuous, and that
     there is only one segment per rupture (but multiple quads).
     Users first and last point to get average strike, which is used
-    for all quads. 
+    for all quads.
 
     Args:
-        rupts (dict): Python translation of rupture json file using json.load 
+        rupts (dict): Python translation of rupture json file using json.load
             method.
-        args (ArgumentParser): argparse object. 
+        args (ArgumentParser): argparse object.
 
     Returns:
         dict: Dictionary of rupture information.
@@ -292,15 +290,14 @@ def parse_json_nshmp(rupts, args):
             strike = np.array([P1.azimuth(P2)])
 
             # Dummy origin
-            origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
+            origin = Origin(
+                {'mag': 0, 'id': '', 'lat': 0, 'lon': 0, 'depth': 0})
             rupt = QuadRupture.fromTrace(xp0, yp0, xp1, yp1, zp,
                                          widths, dips, origin, strike=strike,
                                          reference=args.reference)
 
-
-
             quads = rupt.getQuadrilaterals()
-            edges = get_rupture_edges(quads) # for hypo placement
+            edges = get_rupture_edges(quads)  # for hypo placement
             hlat, hlon, hdepth = get_hypo(edges, args)
         else:
             rupt = None
@@ -310,19 +307,19 @@ def parse_json_nshmp(rupts, args):
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind,
-            quads, id = id)
+            quads, id=id)
 
         event = {'lat': hlat,
                  'lon': hlon,
                  'depth': hdepth,
                  'mag': magnitude,
-                 'rake':rake,
+                 'rake': rake,
                  'id': id_str,
                  'locstring': event_name,
                  'type': 'ALL',
                  'timezone': 'UTC',
-                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
-                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 'time': ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created': ShakeDateTime.utcfromtimestamp(int(time.time()))
                  }
 
         # Update rupture with new origin info
@@ -332,27 +329,28 @@ def parse_json_nshmp(rupts, args):
                                          widths, dips, origin, strike=strike,
                                          reference=args.reference)
 
-        rdict = {'rupture':rupt,
-                 'event':event,
-                 'edges':edges,
-                 'id_str':id_str,
-                 'short_name':short_name,
-                 'real_desc':real_desc,
-                 'eventsourcecode':eventsourcecode
-                }
+        rdict = {'rupture': rupt,
+                 'event': event,
+                 'edges': edges,
+                 'id_str': id_str,
+                 'short_name': short_name,
+                 'real_desc': real_desc,
+                 'eventsourcecode': eventsourcecode
+                 }
         rlist.append(rdict)
 
     return rlist
 
+
 def parse_json_nshmp_sub(rupts, args):
     """
     This is an alternative version of parse_json to use with the Cascadia
-    subduction zone JSON rupture file. 
+    subduction zone JSON rupture file.
 
     Args:
-        rupts (dict): Python translation of rupture json file using json.load 
+        rupts (dict): Python translation of rupture json file using json.load
             method.
-        args (ArgumentParser): argparse object. 
+        args (ArgumentParser): argparse object.
 
     Returns:
         dict: Dictionary of rupture information.
@@ -384,36 +382,32 @@ def parse_json_nshmp_sub(rupts, args):
         botlats = np.array(rupts['events'][i]['botlats'])
         botdeps = np.array(rupts['events'][i]['botdeps'])
 
-        lats = np.append(toplats, botlats[::-1])
-        lons = np.append(toplons, botlons[::-1])
-        deps = np.append(topdeps, botdeps[::-1])
-
         # Dummy origin
-        origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
+        origin = Origin({'mag': 0, 'id': '', 'lat': 0, 'lon': 0, 'depth': 0})
 
-        rupt = EdgeRupture.fromArrays(toplons = toplons,
-                                      toplats = toplats,
-                                      topdeps = topdeps,
-                                      botlons = botlons,
-                                      botlats = botlats,
-                                      botdeps = botdeps,
-                                      origin = origin,
+        rupt = EdgeRupture.fromArrays(toplons=toplons,
+                                      toplats=toplats,
+                                      topdeps=topdeps,
+                                      botlons=botlons,
+                                      botlats=botlats,
+                                      botdeps=botdeps,
+                                      origin=origin,
                                       reference=args.reference)
         rupt._segment_index = np.zeros_like(toplons)
 
         quads = rupt.getQuadrilaterals()
-        edges = get_rupture_edges(quads) # for hypo placement
+        edges = get_rupture_edges(quads)  # for hypo placement
         hlat, hlon, hdepth = get_hypo(edges, args)
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind,
-            quads, id = id)
+            quads, id=id)
 
         event = {'lat': hlat,
                  'lon': hlon,
                  'depth': hdepth,
                  'mag': magnitude,
-                 'rake':rake,
+                 'rake': rake,
                  'id': id_str,
                  'locstring': event_name,
                  'type': 'ALL',  # overwrite later
@@ -424,26 +418,27 @@ def parse_json_nshmp_sub(rupts, args):
         # Update rupture with new origin info
         if rupt is not None:
             origin = Origin(event)
-            rupt = EdgeRupture.fromArrays(toplons = toplons,
-                                          toplats = toplats,
-                                          topdeps = topdeps,
-                                          botlons = botlons,
-                                          botlats = botlats,
-                                          botdeps = botdeps,
-                                          origin = origin,
+            rupt = EdgeRupture.fromArrays(toplons=toplons,
+                                          toplats=toplats,
+                                          topdeps=topdeps,
+                                          botlons=botlons,
+                                          botlats=botlats,
+                                          botdeps=botdeps,
+                                          origin=origin,
                                           reference=args.reference)
 
-        rdict = {'rupture':rupt,
-                 'event':event,
-                 'edges':edges,
-                 'id_str':id_str,
-                 'short_name':short_name,
-                 'real_desc':real_desc,
-                 'eventsourcecode':eventsourcecode
-                }
+        rdict = {'rupture': rupt,
+                 'event': event,
+                 'edges': edges,
+                 'id_str': id_str,
+                 'short_name': short_name,
+                 'real_desc': real_desc,
+                 'eventsourcecode': eventsourcecode
+                 }
         rlist.append(rdict)
 
     return rlist
+
 
 def parse_json_shakemap(rupts, args):
     """
@@ -456,9 +451,9 @@ def parse_json_shakemap(rupts, args):
         - Support specification without a rupture (PointRupture).
 
     Args:
-        rupts (dict): Python translation of rupture json file using json.load 
+        rupts (dict): Python translation of rupture json file using json.load
             method.
-        args (ArgumentParser): argparse object. 
+        args (ArgumentParser): argparse object.
 
     Returns:
         dict: Dictionary of rupture information.
@@ -489,35 +484,39 @@ def parse_json_shakemap(rupts, args):
            "MultiPolygon":
 
             # Dummy origin
-            origin = Origin({'mag':0, 'id':'', 'lat':0, 'lon':0, 'depth':0})
+            origin = Origin(
+                {'mag': 0, 'id': '', 'lat': 0, 'lon': 0, 'depth': 0})
             rupt = json_to_rupture(rupts['events'][i], origin)
 
             quads = rupt.getQuadrilaterals()
-            edges = get_rupture_edges(quads) # for hypo placement
+            edges = get_rupture_edges(quads)  # for hypo placement
             hlat, hlon, hdepth = get_hypo(edges, args)
         else:
             rupt = None
             edges = None
-            quads  = None
-            hlon = float(rupts['events'][i]['features'][0]['geometry']['coordinates'][0])
-            hlat = float(rupts['events'][i]['features'][0]['geometry']['coordinates'][1])
-            hdepth = float(rupts['events'][i]['features'][0]['geometry']['coordinates'][2])
+            quads = None
+            hlon = float(rupts['events'][i]['features'][0]
+                         ['geometry']['coordinates'][0])
+            hlat = float(rupts['events'][i]['features'][0]
+                         ['geometry']['coordinates'][1])
+            hdepth = float(rupts['events'][i]['features']
+                           [0]['geometry']['coordinates'][2])
 
         id_str, eventsourcecode, real_desc = get_event_id(
             event_name, magnitude, args.directivity, args.dirind,
-            quads, id = id)
+            quads, id=id)
 
         event = {'lat': hlat,
                  'lon': hlon,
                  'depth': hdepth,
                  'mag': magnitude,
-                 'rake':rake,
+                 'rake': rake,
                  'id': id_str,
                  'locstring': event_name,
                  'type': 'ALL',
                  'timezone': 'UTC',
-                 'time':ShakeDateTime.utcfromtimestamp(int(time.time())),
-                 'created':ShakeDateTime.utcfromtimestamp(int(time.time()))
+                 'time': ShakeDateTime.utcfromtimestamp(int(time.time())),
+                 'created': ShakeDateTime.utcfromtimestamp(int(time.time()))
                  }
 
         # Update rupture with new origin info
@@ -525,14 +524,14 @@ def parse_json_shakemap(rupts, args):
             origin = Origin(event)
             rupt = json_to_rupture(rupts['events'][i], origin)
 
-        rdict = {'rupture':rupt,
-                 'event':event,
-                 'edges':edges,
-                 'id_str':id_str,
-                 'short_name':short_name,
-                 'real_desc':real_desc,
-                 'eventsourcecode':eventsourcecode
-                }
+        rdict = {'rupture': rupt,
+                 'event': event,
+                 'edges': edges,
+                 'id_str': id_str,
+                 'short_name': short_name,
+                 'real_desc': real_desc,
+                 'eventsourcecode': eventsourcecode
+                 }
         rlist.append(rdict)
 
     return rlist

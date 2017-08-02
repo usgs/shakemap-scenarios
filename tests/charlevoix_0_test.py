@@ -5,7 +5,6 @@ import filecmp
 import shutil
 
 # third party
-import pytest
 import tempfile
 
 from impactutils.io.cmd import get_command_output
@@ -27,11 +26,13 @@ def test_charlevoix_0(tmpdir):
     v = os.path.join(shakedir, 'tests/data/CharlevoixVs30.grd')
     old_vs30file = set_vs30file(v)
     old_gmpe = set_gmpe('stable_continental_nshmp2014_rlme')
-    jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/bssc2014_ceus.json')
+    jsonfile = os.path.join(
+        shakedir, 'rupture_sets/BSSC2014/bssc2014_ceus.json')
 
     # directory holding test and target data for this event
     testinput = os.path.join(p, 'data/charlevoix_0_m7p_se/input')
-    targetinput = os.path.join(shakedir, 'tests/output/charlevoix_0_m7p_se/input')
+    targetinput = os.path.join(
+        shakedir, 'tests/output/charlevoix_0_m7p_se/input')
 
     #---------------------------------------------------------------------------
     # First test mkinputdir
@@ -39,29 +40,26 @@ def test_charlevoix_0(tmpdir):
 
     # Run mkinputdir
     cmd = 'mkinputdir -f %s -i 0 ' % jsonfile
-    rc,so,se = get_command_output(cmd)
+    rc, so, se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
         print(se.decode())
 
-
     # Check output files
 
     # Note: Not checking event.xml because the timestamp breaks cmp comparison.
-    #       Would need to parse and to tag comaprisons. Not worth it. 
+    #       Would need to parse and to tag comaprisons. Not worth it.
 
     target = os.path.join(targetinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
     test = os.path.join(testinput, 'charlevoix_0_m7p_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
-
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     cmd = 'mkscenariogrids -e charlevoix_0_m7p_se -r 0.1 '
-    rc,so,se = get_command_output(cmd)
-
+    rc, so, se = get_command_output(cmd)
 
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
@@ -118,9 +116,7 @@ def test_charlevoix_0(tmpdir):
     set_gmpe(old_gmpe)
     shutil.rmtree(p)
 
+
 if __name__ == "__main__":
     td1 = tempfile.TemporaryDirectory()
     test_charlevoix_0(td1.name)
-
-
-

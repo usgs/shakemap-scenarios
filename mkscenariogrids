@@ -7,11 +7,10 @@ import pkg_resources
 
 import numpy as np
 from collections import OrderedDict
-from configobj import ConfigObj, flatten_errors
-from validate import Validator
+from configobj import ConfigObj
 
-from shakelib.utils.config import get_config_paths, get_custom_validator,\
-        config_error
+from shakelib.utils.config import get_custom_validator,\
+    config_error
 
 #-------------------------------------------------------------------------------
 # Openquake utilities
@@ -22,14 +21,12 @@ from mapio.gmt import GMTGrid
 from mapio.shake import ShakeGrid
 
 # Shakemap imports
-from shakelib.grind.rupture import QuadRupture
 from shakelib.grind.rupture import PointRupture
 from shakelib.grind.rupture import read_rupture_file
 from shakelib.grind.origin import Origin
 from shakelib.grind.distance import Distance
 from shakelib.grind.sites import Sites
 from shakelib.grind.multigmpe import MultiGMPE
-from shakelib.grind.multigmpe import filter_gmpe_list
 from shakelib.grind.directivity.rowshandel2013 import Rowshandel2013
 #from shakelib.utils.timeutils import ShakeDateTime
 from datetime import datetime
@@ -37,19 +34,17 @@ from shakelib.grind.gmice.wgrw12 import WGRW12
 from shakelib.grind.virtualipe import VirtualIPE
 
 from impactutils.io.cmd import get_command_output
-from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
-from scenarios.utils import is_stable
 from scenarios.utils import get_extent
-from scenarios.utils import read_event_xml
 
 
 def str2bool(v):
-  return v.lower() in ("yes", "true", "t", "1")
+    return v.lower() in ("yes", "true", "t", "1")
+
 
 def main(args):
     id_str = args.event
-    
+
     spec_file = pkg_resources.resource_filename(
         'scenarios', os.path.join('..', 'data', 'configspec.conf'))
     validator = get_custom_validator()
@@ -78,7 +73,7 @@ def main(args):
         rc, so, se = get_command_output(cmd)
 
     if args.verbose is True:
-        print('Rupture file: %s\n' %so.decode('utf-8').strip())
+        print('Rupture file: %s\n' % so.decode('utf-8').strip())
 
     if rc is True:
         # There is a rupture
@@ -86,7 +81,7 @@ def main(args):
         rupt = read_rupture_file(origin, ruptfile)
     else:
         rupt = PointRupture(origin)
-    
+
     # Set the dx for the rupture meshing
     rupt._mesh_dx = args.mesh_dx
 
@@ -107,8 +102,6 @@ def main(args):
     config = config.dict()
 
     gmpe = MultiGMPE.from_config(config, verbose=args.verbose)
-
-
 
     #---------------------------------------------------------------------------
     # Compute extent, or get from args
@@ -135,8 +128,8 @@ def main(args):
     nmax = args.max
     if ncell > nmax:
         res = (-(latspan + lonspan) -
-               np.sqrt(latspan**2 + lonspan**2 + 2 * latspan * lonspan *\
-                       (2 * nmax - 1))) /(2 * (1 - nmax))
+               np.sqrt(latspan**2 + lonspan**2 + 2 * latspan * lonspan *
+                       (2 * nmax - 1))) / (2 * (1 - nmax))
         warnings.warn(
             'resolution adjusted due to max number of cells allowed.')
         nx = np.floor(lonspan / res) + 1
@@ -162,18 +155,16 @@ def main(args):
 
     if args.verbose is True:
         print('Rupture context:')
-        print('Mag: %s' %rx.mag)
-        print('Hyp lat: %s' %rx.hypo_lat)
-        print('Hyp lon: %s' %rx.hypo_lon)
-        print('Hyp dep: %s\n' %rx.hypo_depth)
+        print('Mag: %s' % rx.mag)
+        print('Hyp lat: %s' % rx.hypo_lat)
+        print('Hyp lon: %s' % rx.hypo_lon)
+        print('Hyp dep: %s\n' % rx.hypo_depth)
 
     #---------------------------------------------------------------------------
     # Vs30 stuff
     #---------------------------------------------------------------------------
     vs30filename = config['paths']['vs30file']
     vs30grid = GMTGrid.load(vs30filename, smdict, resample=True)
-
-    vs30geodict = vs30grid.getGeoDict()
 
     # Sites object
     sites = Sites(vs30grid)
@@ -185,10 +176,10 @@ def main(args):
 
     if args.verbose is True:
         print('Sites context:')
-        print('Lons: %s to %s' %(np.min(sx.lons), np.max(sx.lons)))
-        print('Lats: %s to %s' %(np.min(sx.lats), np.max(sx.lats)))
-        print('Min Vs30: %s' %np.min(sx.vs30))
-        print('Max Vs30: %s\n' %np.max(sx.vs30))
+        print('Lons: %s to %s' % (np.min(sx.lons), np.max(sx.lons)))
+        print('Lats: %s to %s' % (np.min(sx.lats), np.max(sx.lats)))
+        print('Min Vs30: %s' % np.min(sx.vs30))
+        print('Max Vs30: %s\n' % np.max(sx.vs30))
 
     #---------------------------------------------------------------------------
     # Standard deviation stuff
@@ -217,9 +208,9 @@ def main(args):
 
     if args.verbose is True:
         print('Mesh:')
-        print('Lons: %s to %s' %(np.min(lons), np.max(lons)))
-        print('Lats: %s to %s' %(np.min(lats), np.max(lats)))
-        print('mesh_dx: %f\n' %rupt._mesh_dx)
+        print('Lons: %s to %s' % (np.min(lons), np.max(lons)))
+        print('Lats: %s to %s' % (np.min(lats), np.max(lats)))
+        print('mesh_dx: %f\n' % rupt._mesh_dx)
 
     # Compute distances and site parameters on mesh.
     dist = Distance(gmpe, lon, lat, dep, rupt)
@@ -227,8 +218,8 @@ def main(args):
 
     if args.verbose is True:
         print('Distance context:')
-        print('Min Rrup: %s' %np.min(dx.rrup))
-        print('Max Rrup: %s\n' %np.max(dx.rrup))
+        print('Min Rrup: %s' % np.min(dx.rrup))
+        print('Max Rrup: %s\n' % np.max(dx.rrup))
 
     #---------------------------------------------------------------------------
     # Intensity measure calculation
@@ -249,7 +240,7 @@ def main(args):
               'psa30': {'mean': np.zeros(orig_shape),
                         'sigma': np.zeros(orig_shape)}}
 
-    ## For rock
+    # For rock
     imdict_rock = {'pga': {'mean': np.zeros(orig_shape),
                            'sigma': np.zeros(orig_shape)},
                    'pgv': {'mean': np.zeros(orig_shape),
@@ -281,13 +272,13 @@ def main(args):
     for key, val in imt_dict.items():
         iimt = imt.from_string(val)
         if args.verbose is True:
-            print("IMT: %s" %val)
+            print("IMT: %s" % val)
 
         #-----------------------------------------------------------------------
         # Re-construct the MultiGMPE, but specifcy the IMT so that it filters
         # out GMPEs that cannot be evaluated at this IMT
         #-----------------------------------------------------------------------
-        gmpe = MultiGMPE.from_config(config, filter_imt = iimt,
+        gmpe = MultiGMPE.from_config(config, filter_imt=iimt,
                                      verbose=args.verbose)
         lnmu, lnsd = gmpe.get_mean_and_stddevs(
             sx, rx, dx, iimt, stddev_types)
@@ -336,13 +327,12 @@ def main(args):
             sgrid = GMTGrid(imdict[key]['sigma'], smdict)
 
         if args.verbose is True:
-            print('Min %s: %s' %(key, np.min(mgrid.getData())))
-            print('Max %s: %s\n' %(key, np.max(mgrid.getData())))
+            print('Min %s: %s' % (key, np.min(mgrid.getData())))
+            print('Max %s: %s\n' % (key, np.max(mgrid.getData())))
 
         # Write to file
         mgrid.save(os.path.join(input_dir, key + '_estimates.grd'))
         sgrid.save(os.path.join(input_dir, key + '_sd.grd'))
-
 
     # Also write directivity factors to a file
     if dirbool is True:
@@ -354,21 +344,23 @@ def main(args):
     #---------------------------------------------------------------------------
     # MMI - Use VirtualIPE
     #---------------------------------------------------------------------------
-    gmpe = MultiGMPE.from_config(config, filter_imt = imt.PGV(),
+    gmpe = MultiGMPE.from_config(config, filter_imt=imt.PGV(),
                                  verbose=args.verbose)
     gmice = WGRW12()
     vipe = VirtualIPE.fromFuncs(gmpe, gmice)
     if dirbool is True:
-        mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types, fd1)
+        mmi, mmi_sd = vipe.get_mean_and_stddevs(
+            sx, rx, dx, imt.MMI(), stddev_types, fd1)
     else:
-        mmi,mmi_sd = vipe.get_mean_and_stddevs(sx, rx, dx, imt.MMI(), stddev_types)
+        mmi, mmi_sd = vipe.get_mean_and_stddevs(
+            sx, rx, dx, imt.MMI(), stddev_types)
 
     mgrid = GMTGrid(mmi, smdict)
     sgrid = GMTGrid(mmi_sd[0], smdict)
 
     if args.verbose is True:
-        print('Min MI: %s' %np.min(mgrid.getData()))
-        print('Max MI: %s\n' %np.max(mgrid.getData()))
+        print('Min MI: %s' % np.min(mgrid.getData()))
+        print('Max MI: %s\n' % np.max(mgrid.getData()))
 
     # Write to file
     mgrid.save(os.path.join(input_dir, 'mi_estimates.grd'))
@@ -381,28 +373,28 @@ def main(args):
 
     # Need to write rock_grid.xml
     layers = OrderedDict()
-    layers['pga'] = 100*np.exp(imdict_rock['pga']['mean'])
+    layers['pga'] = 100 * np.exp(imdict_rock['pga']['mean'])
     layers['pgv'] = np.exp(imdict_rock['pgv']['mean'])
     layers['mmi'] = mmi
-    layers['psa03'] = 100*np.exp(imdict_rock['psa03']['mean'])
-    layers['psa10'] = 100*np.exp(imdict_rock['psa10']['mean'])
-    layers['psa30'] = 100*np.exp(imdict_rock['psa30']['mean'])
-    shakeDict = {'event_id':id_str,
-                 'shakemap_id':id_str,
-                 'shakemap_version':1,
-                 'code_version':'4.0',
-                 'process_timestamp':datetime.utcnow(),
-                 'shakemap_originator':'us',
-                 'map_status':'RELEASED',
-                 'shakemap_event_type':'SCENARIO'}
-    eventDict = {'event_id':id_str,
-                 'magnitude':rx.mag,
-                 'depth':rx.hypo_depth,
-                 'lat':rx.hypo_lat,
-                 'lon':rx.hypo_lon,
-                 'event_timestamp':datetime.utcnow(),
-                 'event_network':'us',
-                 'event_description':""}
+    layers['psa03'] = 100 * np.exp(imdict_rock['psa03']['mean'])
+    layers['psa10'] = 100 * np.exp(imdict_rock['psa10']['mean'])
+    layers['psa30'] = 100 * np.exp(imdict_rock['psa30']['mean'])
+    shakeDict = {'event_id': id_str,
+                 'shakemap_id': id_str,
+                 'shakemap_version': 1,
+                 'code_version': '4.0',
+                 'process_timestamp': datetime.utcnow(),
+                 'shakemap_originator': 'us',
+                 'map_status': 'RELEASED',
+                 'shakemap_event_type': 'SCENARIO'}
+    eventDict = {'event_id': id_str,
+                 'magnitude': rx.mag,
+                 'depth': rx.hypo_depth,
+                 'lat': rx.hypo_lat,
+                 'lon': rx.hypo_lon,
+                 'event_timestamp': datetime.utcnow(),
+                 'event_network': 'us',
+                 'event_description': ""}
     #---------------------------------------------------------------------------
     # Note: cannot put standard deviations here becaus they go
     # into uncertainty.xml; in the current version of shakemap there
@@ -410,28 +402,28 @@ def main(args):
     # change this in the next udpate. The uncertainty here is based on
     # instrumental records and so it is not really meaningful for scenarios.
     #---------------------------------------------------------------------------
-    uncDict = {'pga':(0, 0),
-               'pgv':(0, 0),
-               'mmi':(0, 0),
-               'psa03':(0, 0),
-               'psa10':(0, 0),
-               'psa30':(0, 0) }
+    uncDict = {'pga': (0, 0),
+               'pgv': (0, 0),
+               'mmi': (0, 0),
+               'psa03': (0, 0),
+               'psa10': (0, 0),
+               'psa30': (0, 0)}
     shake = ShakeGrid(layers, smdict, eventDict, shakeDict, uncDict)
-    shake.save(os.path.join(input_dir, "rock_grid.xml"),version=1)
+    shake.save(os.path.join(input_dir, "rock_grid.xml"), version=1)
 
 
 if __name__ == '__main__':
     desc = '''
-    Create the ShakeMap *_estimates.grd and *_sd.grd files. Requires an input 
+    Create the ShakeMap *_estimates.grd and *_sd.grd files. Requires an input
     directory with event.xml and rupture files; the inputs should be created by
-    the 'mkinputdir' script or similar. 
+    the 'mkinputdir' script or similar.
     '''
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
         '-e', '--event', required=True,
         help='Specifies the id of the event to process.')
     parser.add_argument(
-        '-r', '--res', default=30/60/60, type=float,
+        '-r', '--res', default=30 / 60 / 60, type=float,
         help='The resolution in decimal degrees; default is 30/60/60.')
     parser.add_argument(
         '-m', '--max', default=500000, type=int,
@@ -440,14 +432,13 @@ if __name__ == '__main__':
         'default is 500,000.')
     parser.add_argument(
         '--mesh_dx', default=0.5, type=float,
-        help='The resolution for rupture mesh in km; only used for EdgeRuptures; '\
+        help='The resolution for rupture mesh in km; only used for EdgeRuptures; '
              'default is 0.5.')
     parser.add_argument(
-        '--extent', nargs='+', help='Extent: lonmin, latmin, lonmax, latmax.', 
+        '--extent', nargs='+', help='Extent: lonmin, latmin, lonmax, latmax.',
         required=False, default=None, type=float)
     parser.add_argument(
-        '-v', '--verbose', action="store_true", default=False, 
-        help = 'Add verbose output.')
+        '-v', '--verbose', action="store_true", default=False,
+        help='Add verbose output.')
     args = parser.parse_args()
     main(args)
-

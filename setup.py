@@ -12,6 +12,6 @@ setup(name='scenarios',
       packages=['scenarios'],
       package_data={'scenarios': [os.path.join('..', 'rupture_sets', '*'),
                                   os.path.join('data', '*'),
-                                  os.path.join('..', 'tests', 'data', '*') ]},
+                                  os.path.join('..', 'tests', 'data', '*')]},
       scripts=['runscenarios', 'mkinputdir', 'mkscenariogrids'],
       )
