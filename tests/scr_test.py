@@ -23,6 +23,7 @@ from scenarios.utils import set_gmpe
 
 
 def test_scr_rlme():
+    old_gmpe = set_gmpe('stable_continental_nshmp2014_rlme')
     spec_file = pkg_resources.resource_filename(
         'scenarios', os.path.join('..', 'data', 'configspec.conf'))
     validator = get_custom_validator()
@@ -40,7 +41,6 @@ def test_scr_rlme():
 
     # MultiGMPE from config
     config = config.dict()
-    old_gmpe = set_gmpe('stable_continental_nshmp2014_rlme')
     gmpe = MultiGMPE.from_config(config)
 
     # MultiGMPE with set_name/DDW
