@@ -1,14 +1,11 @@
 
 import os
-import time
 import json
-import argparse
 import copy
 import shutil
 import ast
 
 import numpy as np
-from lxml import etree
 import xml.etree.ElementTree as ET
 from configobj import ConfigObj
 
@@ -20,11 +17,10 @@ from openquake.hazardlib.geo.utils import get_orthographic_projection
 
 from mapio.gmt import GMTGrid
 from impactutils.io.cmd import get_command_output
-from impactutils.vectorutils.ecef import latlon2ecef, ecef2latlon
+from impactutils.vectorutils.ecef import ecef2latlon
 from impactutils.vectorutils.vector import Vector
 from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
-from shakelib.grind.origin import Origin
 from shakelib.grind.origin import read_event_file
 #from shakelib.utils.timeutils import ShakeDateTime
 from shakelib.grind.rupture import EdgeRupture
@@ -49,6 +45,7 @@ def set_shakehome(path):
     config.write()
     return old_shakehome
 
+
 def set_vs30file(path):
     """
     Helper function for managing vs30file in the scenario conf file.
@@ -67,9 +64,10 @@ def set_vs30file(path):
     config.write()
     return old_vs30file
 
+
 def set_gmpe(gmpe):
     """
-    Helper function for managing gmpe in the scenario conf file. 
+    Helper function for managing gmpe in the scenario conf file.
 
     Args:
         gmpe (str): The designed OQ GMPE or name of GMPE set.
@@ -85,17 +83,18 @@ def set_gmpe(gmpe):
     config.write()
     return old_gmpe
 
+
 def find_rupture(pattern, file):
     """
     Convenience method for finding name and index of a rupture based on pattern
-    matching the description. 
+    matching the description.
 
     Args:
-        pattern (str): Pattern to search for. 
-        file (str): JSON rupture file to look in. 
+        pattern (str): Pattern to search for.
+        file (str): JSON rupture file to look in.
 
     Return:
-        tuple: List of descriptions and list of indices. 
+        tuple: List of descriptions and list of indices.
 
     """
     with open(file) as f:
@@ -108,22 +107,23 @@ def find_rupture(pattern, file):
     else:
         skey = 'desc'
 
-    desc = [r[skey] for r in rupts['events'] ]
+    desc = [r[skey] for r in rupts['events']]
 
     ind = np.where(list(map(lambda x: pattern in str(x), desc)))[0]
     result = np.array(desc)[ind]
 
     for i in range(len(ind)):
-        print('%i: %s' %(ind[i], result[i]))
+        print('%i: %s' % (ind[i], result[i]))
 
     return ind, result
+
 
 def get_hypo(edges, args):
     """
     Args:
         edges (list): A list of two lists of points; the first list corresponds
-            to the top edge and the second is the bottom edge. 
-        args (ArgumentParser): argparse object. 
+            to the top edge and the second is the bottom edge.
+        args (ArgumentParser): argparse object.
 
     Returns:
         tuple: Hypocenter (lat, lon depth).
@@ -136,21 +136,20 @@ def get_hypo(edges, args):
     # NOTE: This could also be made a function of mechanism
     if args.dirind == -1:
         # no directivity
-        dxp = 0.5 # strike
-        dyp = 0.6 # dip
+        dxp = 0.5  # strike
+        dyp = 0.6  # dip
     elif args.dirind == 0:
         # first unilateral
-        dxp = 0.05 # strike
-        dyp = 0.6 # dip
+        dxp = 0.05  # strike
+        dyp = 0.6  # dip
     elif args.dirind == 2:
         # second unilateral
-        dxp = 0.95 # strike
-        dyp = 0.6 # dip
+        dxp = 0.95  # strike
+        dyp = 0.6  # dip
     elif args.dirind == 1:
         # bilateral
-        dxp = 0.5 # strike
-        dyp = 0.6 # dip
-        
+        dxp = 0.5  # strike
+        dyp = 0.6  # dip
 
     # Convert to ECEF
     topxy = [Vector.fromPoint(geo.point.Point(p.longitude,
@@ -169,8 +168,8 @@ def get_hypo(edges, args):
     botdist = np.array([b0.distance(p) for p in botxy])
 
     # Normalize distance from 0 to 1
-    topdist = topdist/np.max(topdist)
-    botdist = botdist/np.max(botdist)
+    topdist = topdist / np.max(topdist)
+    botdist = botdist / np.max(botdist)
 
     #---------------------------------------------------------------------------
     # Find points of surrounding quad
@@ -193,8 +192,8 @@ def get_hypo(edges, args):
     pp3 = botxy[bix1]
 
     # How far from pp0 to pp1, and pp2 to pp3?
-    dxt = (dxp - topdist[tix0])/(topdist[tix1] - topdist[tix0])
-    dxb = (dxp - botdist[bix0])/(botdist[bix1] - botdist[bix0])
+    dxt = (dxp - topdist[tix0]) / (topdist[tix1] - topdist[tix0])
+    dxb = (dxp - botdist[bix0]) / (botdist[bix1] - botdist[bix0])
 
     mp0 = pp0 + (pp1 - pp0) * dxt
     mp1 = pp3 + (pp2 - pp3) * dxb
@@ -203,13 +202,14 @@ def get_hypo(edges, args):
 
     return hlat, hlon, hdepth
 
+
 def get_extent(origin, rupture=None):
     """
     Method to compute map extent from rupture.
 
     Args:
-        origin (Origin): A ShakeMap Origin instance. 
-        rupture (Rupture): A ShakeMap Rupture instance (optional). 
+        origin (Origin): A ShakeMap Origin instance.
+        rupture (Rupture): A ShakeMap Rupture instance (optional).
 
     Returns:
         tuple: lonmin, lonmax, latmin, latmax.
@@ -250,7 +250,7 @@ def get_extent(origin, rupture=None):
             mindist_km = 63.4 * mag**2 - 465.4 * mag + 581.3
 
     # Apply an upper limit on extent. This should only matter for large
-    # magnitudes (> ~8.25) in stable tectonic environments. 
+    # magnitudes (> ~8.25) in stable tectonic environments.
     if mindist_km > 1000.:
         mindist_km = 1000.
 
@@ -296,41 +296,39 @@ def is_stable(lon, lat):
     work outside of the US.
 
     Args:
-        lon (float): Lognitude. 
-        lat (float): Latitude. 
+        lon (float): Lognitude.
+        lat (float): Latitude.
 
     Returns:
-        bool: Is the point classified as tectonically stable. 
+        bool: Is the point classified as tectonically stable.
 
     """
     here = os.path.dirname(os.path.abspath(__file__))
     pfile = os.path.join(here, 'data', 'nshmp_stable.json')
     with open(pfile) as f:
         coords = json.load(f)
-    tmp = [(float(x),float(y)) for x, y in zip(coords['lon'], coords['lat'])]
+    tmp = [(float(x), float(y)) for x, y in zip(coords['lon'], coords['lat'])]
     poly = Polygon(tmp)
     p = Point((lon, lat))
     return p.within(poly)
 
 
-
-
 def rake_to_type(rake):
     """
     Convert rake to mechansim (using the Shakemap convention for mechanism
-    strings). 
+    strings).
 
     Args:
-        rake (float): Rake angle in degress. 
+        rake (float): Rake angle in degress.
 
-    Returns: 
-        str: String indicating mechanism. 
+    Returns:
+        str: String indicating mechanism.
 
     """
 
     type = 'ALL'
     if (rake >= -180 and rake <= -150) or \
-       (rake >= -30  and rake <= 30) or \
+       (rake >= -30 and rake <= 30) or \
        (rake >= 150 and rake <= 180):
         type = 'SS'
     if rake >= -120 and rake <= -60:
@@ -343,10 +341,10 @@ def rake_to_type(rake):
 def strike_to_quadrant(strike):
     """
     Convert strike angle to quadrant. Used for constructing a string describing
-    the directivity direction. 
+    the directivity direction.
 
     Args:
-        strike (float): Strike angle in degrees. 
+        strike (float): Strike angle in degrees.
 
     Returns:
         int: An integer indicating which quadrant the strike is pointing.
@@ -374,23 +372,24 @@ def strike_to_quadrant(strike):
         q = 4
     return q
 
-def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
+
+def get_event_id(event_name, mag, directivity, i_dir, quads, id=None):
     """
     This is to sort out the event id, event source code, realization
-    description, and the quadrilateral that was selected for placing 
+    description, and the quadrilateral that was selected for placing
     the hypocenter on.
 
     Args:
-        event_name (str): Event name/description. 
-        mag (float): Earthquake magnitude. 
+        event_name (str): Event name/description.
+        mag (float): Earthquake magnitude.
         directivity (bool): Is directivity applied?
         i_dir (int): Directivity orientation indicator. Valid values are 0, 1, 2.
         quads (list): List of quadrilaterals describing the rupture.
-        id (str): Optional event id. If None, then event id is constructed from 
+        id (str): Optional event id. If None, then event id is constructed from
             event_name.
 
-    Returns: 
-        tuple: id_str, eventsourcecode, real_desc, selquad. 
+    Returns:
+        tuple: id_str, eventsourcecode, real_desc, selquad.
     """
 
     event_legal = "".join(x for x in event_name if x.isalnum())
@@ -416,12 +415,11 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
         strike = geo.geodetic.azimuth(lon0[0], lat0[0], clon, clat)
         squadrant = strike_to_quadrant(strike)
 
-        if directivity: 
+        if directivity:
             dirtag = 'dir' + str(i_dir)
         else:
             dirtag = ''
 
-        nq = len(quads)
         if (i_dir == 0) and (directivity):
             if squadrant == 1:
                 ddes = "Northern directivity"
@@ -471,30 +469,30 @@ def get_event_id(event_name, mag, directivity, i_dir, quads, id = None):
             eventsourcecode = id
         else:
             eventsourcecode = "%s_M%s_se" % (id[:20], mag_str)
-        
 
     eventsourcecode = eventsourcecode.lower()
     return id_str, eventsourcecode, real_desc
 
-def get_rupture_edges(q, rev = None):
+
+def get_rupture_edges(q, rev=None):
     """
     Return a list of the top and bottom edges of the rupture. This is
     useful as a simplified visual representation of the rupture and placing
-    the hypocenter but not used for distance calculaitons. 
+    the hypocenter but not used for distance calculaitons.
 
     Args:
         q (list): List of quads.
-        rev (list): Optional list of booleans indicating whether or not 
+        rev (list): Optional list of booleans indicating whether or not
         the quad is reversed.
 
     Returns:
-        list: A list of two lists of points; the first list corresponds to 
-        the top edge and the second is the bottom edge. 
+        list: A list of two lists of points; the first list corresponds to
+        the top edge and the second is the bottom edge.
     """
     nq = len(q)
 
     if rev is None:
-        rev = np.zeros(nq, dtype = bool)
+        rev = np.zeros(nq, dtype=bool)
     else:
         rev = rev.astype('bool')
 
@@ -543,21 +541,22 @@ def get_rupture_edges(q, rev = None):
     edges = [topp, botp]
     return edges
 
-def run_one_old_shakemap(eventid, genex = True):
+
+def run_one_old_shakemap(eventid, genex=True):
     """
     Convenience method for running old (v 3.5) shakemap with new estimates. This
-    allows for us to generate all the products with the old code since the new 
-    code cannot do this yet, but use the new code for computing the ground 
-    motions. 
+    allows for us to generate all the products with the old code since the new
+    code cannot do this yet, but use the new code for computing the ground
+    motions.
 
     Args:
-        eventid (srt): Specifies the id of the event to process. 
+        eventid (srt): Specifies the id of the event to process.
         genex (bool): Should genex be run?
 
     Returns:
-        dictionary: Each entry is the log file for the different ShakeMap3.5 
-            calls. 
-        
+        dictionary: Each entry is the log file for the different ShakeMap3.5
+            calls.
+
     """
     config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
     shakehome = config['paths']['shakehome']
@@ -570,7 +569,7 @@ def run_one_old_shakemap(eventid, genex = True):
     xml_file = os.path.join(inputdir, 'event.xml')
     # Read in event.xml
     event = read_event_file(xml_file)
-    
+
     # Read in gmpe set name
     gmpefile = open(os.path.join(inputdir, "gmpe_set_name.txt"), "r")
     set_name = gmpefile.read()
@@ -586,21 +585,19 @@ def run_one_old_shakemap(eventid, genex = True):
             reference = eq.attrib['reference']
         else:
             reference = ''
-        eventsourcecode = eq.attrib['eventsourcecode']
 
     event['description'] = description
     event['directivity'] = directivity
     event['reference'] = reference
 
-    origin = Origin(event)
 
     grd = os.path.join(inputdir, 'pgv_estimates.grd')
     gdict = GMTGrid.getFileGeoDict(grd)[0]
-    
+
     # Tolerance is a bit hacky but necessary to prevent GMT
     # from barfing becasue it thinks that the estimates files
     # do not cover the desired area sampled by grind's call
-    # with grdsample. 
+    # with grdsample.
     tol = gdict.dx
     W = gdict.xmin + tol
     E = gdict.xmax - tol
@@ -611,7 +608,7 @@ def run_one_old_shakemap(eventid, genex = True):
     confdir = os.path.join(eventdir, 'config')
     if os.path.isdir(confdir) == False:
         os.mkdir(confdir)
-        
+
     # need to copy default grind.conf
     default_grind_conf = os.path.join(shakehome, 'config', 'grind.conf')
     grind_conf = os.path.join(confdir, 'grind.conf')
@@ -619,52 +616,54 @@ def run_one_old_shakemap(eventid, genex = True):
 
     # Set strictbound and resolution to match estiamtes.grd files
     with open(grind_conf, 'a') as f:
-        f.write('x_grid_interval : %.16f\n' %gdict.dx)
-        f.write('y_grid_interval : %.16f\n' %gdict.dy)
-        f.write('strictbound : %.9f %.9f %.9f %.9f\n' %(W, S, E, N))
+        f.write('x_grid_interval : %.16f\n' % gdict.dx)
+        f.write('y_grid_interval : %.16f\n' % gdict.dy)
+        f.write('strictbound : %.9f %.9f %.9f %.9f\n' % (W, S, E, N))
 
     # Grind
-    callgrind = os.path.join(shakebin, 'grind') + ' -event ' + eventid + ' -psa'
-    rc,so,se = get_command_output(callgrind)
-    log['grind'] = {'rc':rc, 'so':so, 'se':se}
-    
+    callgrind = os.path.join(shakebin, 'grind') + \
+        ' -event ' + eventid + ' -psa'
+    rc, so, se = get_command_output(callgrind)
+    log['grind'] = {'rc': rc, 'so': so, 'se': se}
+
     # Add GMPE set name to info.json
     cmd = os.path.join(shakebin, 'edit_info') + ' -event ' + eventid + \
         ' -tag gmpe_reference' + ' -value ' + set_name
-    rc,so,se = get_command_output(cmd)
-    log['edit_info'] = {'rc':rc, 'so':so, 'se':se}
+    rc, so, se = get_command_output(cmd)
+    log['edit_info'] = {'rc': rc, 'so': so, 'se': se}
 
     # Tag
     calltag = os.path.join(shakebin, 'tag') + \
         ' -event ' + eventid + ' -name \"' + event['locstring'] + ' - ' + \
         event['description'] + '\"'
-    rc,so,se = get_command_output(calltag)
-    log['tag'] = {'rc':rc, 'so':so, 'se':se}
+    rc, so, se = get_command_output(calltag)
+    log['tag'] = {'rc': rc, 'so': so, 'se': se}
 
     # Copy rock_grid.xml from input to output directory
     rg_scr = os.path.join(inputdir, 'rock_grid.xml')
     rg_dst = os.path.join(eventdir, 'output', 'rock_grid.xml')
     cmd = shutil.copy(rg_scr, rg_dst)
-    
+
     # Mapping
     callmapping = os.path.join(shakebin, 'mapping') + ' -event ' + \
         eventid + ' -timestamp -nohinges '
-    rc,so,se = get_command_output(callmapping)
-    log['mapping'] = {'rc':rc, 'so':so, 'se':se}
-    
+    rc, so, se = get_command_output(callmapping)
+    log['mapping'] = {'rc': rc, 'so': so, 'se': se}
+
     # Genex
     if genex is True:
         callgenex = os.path.join(shakebin, 'genex') + ' -event ' + \
             eventid + ' -metadata -zip -verbose -shape shape -shape hazus'
-        rc,so,se = get_command_output(callgenex)
-        log['genex'] = {'rc':rc, 'so':so, 'se':se}
+        rc, so, se = get_command_output(callgenex)
+        log['genex'] = {'rc': rc, 'so': so, 'se': se}
 
     return log
+
 
 def send_origin(eventid):
     """
     Args:
-        eventid (str): Event id. 
+        eventid (str): Event id.
 
     Returns:
         dict: transfer logs.
@@ -676,12 +675,11 @@ def send_origin(eventid):
     key = config['paths']['key']
     pdlconf = config['paths']['pdlconf']
     catalog = config['grind']['catalog']
-    
-    shakebin = os.path.join(shakehome, 'bin')
+
     datadir = os.path.join(shakehome, 'data')
-    xmlfile = os.path.join(datadir, eventid, 'input','event.xml')
+    xmlfile = os.path.join(datadir, eventid, 'input', 'event.xml')
     eventdict = read_event_xml(xmlfile)
-    short_name = eventdict['locstring'] # locstring in event.xml
+    short_name = eventdict['locstring']  # locstring in event.xml
     if eventdict['eventsourcecode'] is None:
         eventsourcecode = eventid
     else:
@@ -691,29 +689,29 @@ def send_origin(eventid):
     depth = eventdict['depth']
     magnitude = eventdict['mag']
     sdt = eventdict['sdt']
-    
+
     send_origin = \
-      'java -jar ' + pdlbin + ' --send ' + \
-      '--configFile=' + pdlconf + ' ' + \
-      '--privateKey=' + key + ' ' + \
-      '\"--property-title=' + short_name + '\" ' + \
-      '--source=us ' + \
-      '--eventsource=' + catalog + ' ' + \
-      '--code=' + catalog + eventid + ' ' + \
-      '--eventsourcecode=' + eventsourcecode + ' ' + \
-      '--type=origin-scenario ' + \
-      '--latitude=' + str(lat) + ' ' + \
-      '--longitude=' + str(lon) + ' ' + \
-      '--magnitude=' + str(magnitude) + ' ' + \
-      '--depth=' + str(depth) + ' ' + \
-      '--eventtime=' + sdt.strftime('%Y-%m-%dT%H:%M:%SZ')
-    rc,so,se = get_command_output(send_origin)
-    return {'rc':rc, 'so':so, 'se':se}
+        'java -jar ' + pdlbin + ' --send ' + \
+        '--configFile=' + pdlconf + ' ' + \
+        '--privateKey=' + key + ' ' + \
+        '\"--property-title=' + short_name + '\" ' + \
+        '--source=us ' + \
+        '--eventsource=' + catalog + ' ' + \
+        '--code=' + catalog + eventid + ' ' + \
+        '--eventsourcecode=' + eventsourcecode + ' ' + \
+        '--type=origin-scenario ' + \
+        '--latitude=' + str(lat) + ' ' + \
+        '--longitude=' + str(lon) + ' ' + \
+        '--magnitude=' + str(magnitude) + ' ' + \
+        '--depth=' + str(depth) + ' ' + \
+        '--eventtime=' + sdt.strftime('%Y-%m-%dT%H:%M:%SZ')
+    rc, so, se = get_command_output(send_origin)
+    return {'rc': rc, 'so': so, 'se': se}
 
 
 def read_event_xml(file):
     """
-    Read event.xml. 
+    Read event.xml.
 
     Args:
         file (str): Path to event.xml file.
@@ -771,11 +769,9 @@ def read_event_xml(file):
              'mech': mech,
              'time': sdt.strftime('%Y-%m-%dT%H:%M:%SZ'),
              'timezone': 'UTC',
-             'directivity':directivity,
-             'description':description,
-             'eventsourcecode':eventsourcecode,
-             'sdt':sdt}
+             'directivity': directivity,
+             'description': description,
+             'eventsourcecode': eventsourcecode,
+             'sdt': sdt}
 
     return event
-
-

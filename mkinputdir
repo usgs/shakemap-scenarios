@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
 import os
-import time
 import json
 import argparse
-from lxml import etree
 from configobj import ConfigObj
 
 from scenarios.input_output import parse_bssc2014_ucerf
@@ -25,7 +23,6 @@ def main(args):
         rupts = json.load(f)
         nrup = len(rupts['events'])
         print('Total number of ruptures: %d' % nrup)
-
 
     if rupts['format'].lower() == 'ucerf':
         rlist = parse_bssc2014_ucerf(rupts, args)
@@ -70,15 +67,14 @@ def main(args):
         #-----------------------------------------------------------------------
         if rdict['rupture'] is not None:
             write_rupture_files(input_dir, rdict)
-        
-        write_event_xml(input_dir, rdict, args.directivity)
 
+        write_event_xml(input_dir, rdict, args.directivity)
 
 
 if __name__ == '__main__':
     desc = '''
     Create ShakeMap input directory. This is designed primarily to be used with
-    an input file that provides rupture information. 
+    an input file that provides rupture information.
     '''
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-f', '--file', help='File with rupture information.',
@@ -86,13 +82,13 @@ if __name__ == '__main__':
     parser.add_argument('-r', '--reference', help='Reference for rupture source.',
                         default='')
     parser.add_argument('-d', '--dirind',
-                        help='Directivity; -1 for no directivity (default); 0 '\
-                            'and 2 are the two opposing unilateral directions,'\
-                            ' 1 is for bilateral.',
+                        help='Directivity; -1 for no directivity (default); 0 '
+                        'and 2 are the two opposing unilateral directions,'
+                        ' 1 is for bilateral.',
                         default=-1, type=int, choices=[-1, 0, 1, 2])
     parser.add_argument('-i', '--index',
-                        help='List of rupture indices to run. Useful if you do '\
-                            'not want to run all ruptures in the file.',
+                        help='List of rupture indices to run. Useful if you do '
+                        'not want to run all ruptures in the file.',
                         nargs='*')
     args = parser.parse_args()
     if args.dirind == -1:
@@ -100,4 +96,3 @@ if __name__ == '__main__':
     else:
         args.directivity = True
     main(args)
-

@@ -5,8 +5,6 @@ import sys
 import argparse
 from configobj import ConfigObj
 
-import numpy as np
-
 from impactutils.io.cmd import get_command_output
 
 
@@ -52,30 +50,23 @@ def main(args):
         else:
             ii = ii + 1
 
+
 if __name__ == '__main__':
     desc = '''
     This is a wrapper around 'mkscenariogrids' that grabs the list
     of all the existing event directories, loops over them and
     breaks up the run onto multiple processors. Usuallly want to
-    run 'mkinputdir' first. 
+    run 'mkinputdir' first.
     '''
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
         '-n', '--nproc', help='Number of processors.', type=int)
-    parser.add_argument(
-        '-g', '--gmpe', default='nshmp14_shallow',
-        help='Select GMPE(s). Note that nshmp14_shalllow automatically selects '\
-             'between nshmp14_acr, nshmp14_scr_rlme, and nshmp14_scr_grd, but '\
-             'this currently only works in US.',
-        choices=[
-            'nshmp14_shallow', 
-            'nshmp14_acr', 'nshmp14_scr_rlme', 'nshmp14_scr_grd',
-            'nshmp14_sub_i', 'nshmp14_sub_s'])
-    parser.add_argument('-r', '--res', default=30/60/60, type=float,
-                        help='The resolution in decimal degrees; default is 30/60/60.')
+    parser.add_argument('-r', '--res', default=30 / 60 / 60, type=float,
+                        help='The resolution in decimal degrees; '
+                             'default is 30/60/60.')
     parser.add_argument('-m', '--max', default=500000, type=int,
-                        help='Maximum number of cells allowed; '
-                        'resolution is adjusted to ensure this number is not exceeded; '
-                        'default is 500,000.')
+                        help='Maximum number of cells allowed; resolution '
+                             'is adjusted to ensure this number is no '
+                             'exceeded; default is 500,000.')
     args = parser.parse_args()
     main(args)

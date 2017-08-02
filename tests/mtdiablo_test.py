@@ -5,7 +5,6 @@ import filecmp
 import shutil
 
 # third party
-import pytest
 import tempfile
 
 from impactutils.io.cmd import get_command_output
@@ -30,7 +29,8 @@ def test_mtdiablo(tmpdir):
     v = os.path.join(shakedir, 'tests/data/NCalVs30.grd')
     old_vs30file = set_vs30file(v)
     old_gmpe = set_gmpe('active_crustal_nshmp2014')
-    jsonfile = os.path.join(shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
+    jsonfile = os.path.join(
+        shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
     testinput = os.path.join(p, 'data/mountdiablothrustell_m6p67_se/input')
@@ -42,16 +42,15 @@ def test_mtdiablo(tmpdir):
 
     # Run mkinputdir
     cmd = 'mkinputdir -f %s -i 0' % jsonfile
-    rc,so,se = get_command_output(cmd)
+    rc, so, se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
         print(se.decode())
 
-
     # Check output files
 
     # Note: Not checking event.xml because the timestamp breaks cmp comparison.
-    #       Would need to parse and to tag comaprisons. Not worth it. 
+    #       Would need to parse and to tag comaprisons. Not worth it.
 
     target = os.path.join(
         targetinput, 'mountdiablothrustell_m6p67_se_for-map_fault.txt')
@@ -59,15 +58,13 @@ def test_mtdiablo(tmpdir):
         testinput, 'mountdiablothrustell_m6p67_se_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
-
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
     v = os.path.join(shakedir, 'tests/data/NCalVs30.grd')
     cmd = 'mkscenariogrids -e mountdiablothrustell_m6p67_se -r 0.1 '
-    rc,so,se = get_command_output(cmd)
-
+    rc, so, se = get_command_output(cmd)
 
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')

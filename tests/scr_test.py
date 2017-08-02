@@ -21,7 +21,6 @@ from shakelib.grind.multigmpe import DualDistanceWeights
 from scenarios.utils import set_gmpe
 
 
-
 def test_scr_rlme():
     old_gmpe = set_gmpe('stable_continental_nshmp2014_rlme')
     spec_file = pkg_resources.resource_filename(
@@ -52,7 +51,6 @@ def test_scr_rlme():
     rctx = RuptureContext()
     dctx = DistancesContext()
     sctx = SitesContext()
-    sctx_rock = SitesContext()
 
     rctx.rake = 0.0
     rctx.dip = 90.0
