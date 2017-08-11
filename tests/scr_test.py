@@ -12,11 +12,10 @@ from openquake.hazardlib.gsim.base import SitesContext
 
 from configobj import ConfigObj
 
-from shakelib.utils.config import get_custom_validator,\
-    config_error
+from shakemap.utils.config import get_custom_validator
+from shakemap.utils.config import config_error
 
 from shakelib.grind.multigmpe import MultiGMPE
-from shakelib.grind.multigmpe import DualDistanceWeights
 
 from scenarios.utils import set_gmpe
 
@@ -42,10 +41,6 @@ def test_scr_rlme():
     config = config.dict()
     gmpe = MultiGMPE.from_config(config)
 
-    # MultiGMPE with set_name/DDW
-    set_name = 'nshmp14_scr_rlme'
-    ddw = DualDistanceWeights.from_set_name(set_name)
-
     # Input stuff
     IMT = imt.SA(1.0)
     rctx = RuptureContext()
@@ -70,8 +65,6 @@ def test_scr_rlme():
     sctx = MultiGMPE.set_sites_depth_parameters(sctx, gmpe)
 
     # Evaluate
-    ddw_lmean, dummy = ddw.get_mean_and_stddevs(
-        sctx, rctx, dctx, IMT, [const.StdDev.TOTAL])
     conf_lmean, dummy = gmpe.get_mean_and_stddevs(
         sctx, rctx, dctx, IMT, [const.StdDev.TOTAL])
 
@@ -98,14 +91,10 @@ def test_scr_rlme():
          -2.95340501, -3.01462691, -3.07750731, -3.14209631, -3.20844679])
 
     np.testing.assert_allclose(conf_lmean, target_lmean, atol=1e-6)
-    np.testing.assert_allclose(ddw_lmean, target_lmean, atol=1e-6)
 
     # Redo for 3 sec so some GMPEs are filtered out
     IMT = imt.SA(3.0)
-    ddw = DualDistanceWeights.from_set_name(set_name, IMT)
     gmpe = MultiGMPE.from_config(config, filter_imt=IMT)
-    ddw_lmean, dummy = ddw.get_mean_and_stddevs(
-        sctx, rctx, dctx, IMT, [const.StdDev.TOTAL])
     conf_lmean, dummy = gmpe.get_mean_and_stddevs(
         sctx, rctx, dctx, IMT, [const.StdDev.TOTAL])
 
@@ -132,7 +121,6 @@ def test_scr_rlme():
          -3.78747847, -3.82767809, -3.86886488, -3.91108308, -3.95437899])
 
     np.testing.assert_allclose(conf_lmean, target_lmean, atol=1e-6)
-    np.testing.assert_allclose(ddw_lmean, target_lmean, atol=1e-6)
 
     # Clean up
     set_gmpe(old_gmpe)
