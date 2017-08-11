@@ -1,11 +1,18 @@
 #!/bin/bash
 echo $PATH
 
-VENV=shake
+VENV=scenarios
 PYVER=3.5
 
 
-DEPARRAY=(numpy scipy matplotlib jupyter rasterio fiona xlrd xlwt pandas pytables cartopy shapely h5py gdal descartes configobj pyproj pytest pytest-cov psutil lxml pep8-naming openpyxl)
+unamestr=`uname`
+if [[ "$unamestr" == 'Linux' ]]; then
+    DEPARRAY=(numpy=1.11 scipy=0.19.1 matplotlib=2.0.2 rasterio=1.0a2 pandas=0.20.3 h5py=2.7.0 gdal=2.1.4 pytest=3.2.0 pytest-cov=2.5.1 cartop\
+y=0.15.1 fiona=1.7.8 numexpr=2.6.2 configobj=5.0.6 decorator=4.1.2 versioneer==0.18)
+elif [[ "$unamestr" == 'FreeBSD' ]]; then
+   DEPARRAY=(numpy=1.13.1 scipy=0.19.1 matplotlib=2.0.2 rasterio=1.0a9 pandas=0.20.3 h5py=2.7.0 gdal=2.1.4 pytest=3.2.0 pytest-cov=2.5.1 carto\
+py=0.15.1 fiona=1.7.8 numexpr=2.6.2 configobj=5.0.6 decorator=4.1.2 versioneer==0.18)
+fi
 
 # turn off whatever other virtual environment user might be in
 source deactivate
@@ -19,7 +26,7 @@ cd $CWD
 conda create --name $VENV --yes --channel conda-forge python=$PYVER ${DEPARRAY[*]} -y
 
 # activate the new environment
-source activate shake
+source activate scenarios
 
 # do pip installs of those things that are not available via conda.
 
@@ -44,7 +51,13 @@ curl --max-time 60 --retry 3 -L https://github.com/usgs/shakelib/archive/master.
 pip -v install --no-deps shakelib.zip
 rm shakelib.zip
 
+#get shakemap
+curl --max-time 60 --retry 3 -L https://github.com/usgs/shakemap/archive/master.zip -o shakelib.zip
+pip -v install --no-deps shakelib.zip
+rm shakelib.zip
+
+
 pip install sphinx_rtd_theme
 
 # tell the user they have to activate this environment
-echo "Type 'source activate shake' to use this new virtual environment."
+echo "Type 'source activate scenarios' to use this new virtual environment."
