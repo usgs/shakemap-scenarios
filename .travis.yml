@@ -19,7 +19,7 @@ install:
     - conda update -q conda
     - conda info -a
     - bash setup_env.sh
-    - source activate shake
+    - source activate scenarios
     #---------------------
     # Install shakemap-scenarios
     #---------------------
