@@ -9,8 +9,8 @@ import numpy as np
 from collections import OrderedDict
 from configobj import ConfigObj
 
-from shakelib.utils.config import get_custom_validator,\
-    config_error
+from shakemap.utils.config import get_custom_validator
+from shakemap.utils.config import config_error
 
 #-------------------------------------------------------------------------------
 # Openquake utilities
@@ -21,14 +21,13 @@ from mapio.gmt import GMTGrid
 from mapio.shake import ShakeGrid
 
 # Shakemap imports
-from shakelib.grind.rupture import PointRupture
-from shakelib.grind.rupture import read_rupture_file
-from shakelib.grind.origin import Origin
+from shakelib.grind.rupture.point_rupture import PointRupture
+from shakelib.grind.rupture.factory import get_rupture
+from shakelib.grind.rupture.origin import Origin
 from shakelib.grind.distance import Distance
 from shakelib.grind.sites import Sites
 from shakelib.grind.multigmpe import MultiGMPE
 from shakelib.grind.directivity.rowshandel2013 import Rowshandel2013
-#from shakelib.utils.timeutils import ShakeDateTime
 from datetime import datetime
 from shakelib.grind.gmice.wgrw12 import WGRW12
 from shakelib.grind.virtualipe import VirtualIPE
@@ -78,7 +77,7 @@ def main(args):
     if rc is True:
         # There is a rupture
         ruptfile = so.decode('utf-8').strip()
-        rupt = read_rupture_file(origin, ruptfile)
+        rupt = get_rupture(origin, ruptfile)
     else:
         rupt = PointRupture(origin)
 

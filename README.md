@@ -39,8 +39,8 @@ products to COMCAT is still handled with ShakeMap 3.5.
 Dependencies
 ------------
 * ShakeMap 3.5: http://usgs.github.io/shakemap/manual_index.html
-* The python dependencies are the same as ShakeMap 4.0, so use the setup_env.sh
-  script from here: https://github.com/usgs/shakemap
+* The python dependencies are the same as shakelib, so use the setup_env.sh
+  script from here: https://github.com/usgs/shakelib
 
 Workflow
 --------
@@ -51,47 +51,31 @@ directory named `scenarios.conf` with the following contents:
 ```ini
 
 [paths]
-    #---------------------------------------------------------------------------
     # Base directory of shakemap 3.5 installation
-    #---------------------------------------------------------------------------
     shakehome = /home/user/shake
 
-    #---------------------------------------------------------------------------
     # Path to Vs30 grid
-    #---------------------------------------------------------------------------
     vs30file = /home/user/data/Global_30_sec/global_vs30_ca_waor_ut_jp.grd
 
-    #---------------------------------------------------------------------------
     # PDL paths
-    #---------------------------------------------------------------------------
     pdlbin = /home/user/ProductClient/ProductClient.jar
     key = /home/user/ProductClient/key
     pdlconf = /home/user/ProductClient/scenarioconfig.ini
 
 [grind]
-    #---------------------------------------------------------------------------
     # Catalog name, i.e., "eventsource"
-    #---------------------------------------------------------------------------
     catalog = test
 
-    #---------------------------------------------------------------------------
     # GMPE; found in openquake.hazardlib.gsim or specified in gmpe_sets.conf
-    #---------------------------------------------------------------------------
     gmpe=active_crustal_nshmp2014
 
-    #---------------------------------------------------------------------------
     # IPE; either VirtualIPE or found in shakelib.grind.ipe (does not yet exist)
-    #---------------------------------------------------------------------------
     ipe=VirtualIPE
 
-    #---------------------------------------------------------------------------
     # GMICE; found in shakelib.grind.gmice
-    #---------------------------------------------------------------------------
     gmice = WGRW12
 
-    #---------------------------------------------------------------------------
     # Intensity measure component (IMC); currently either "Larger" or "RotD50"
-    #---------------------------------------------------------------------------
     component = Larger
 ```
 Note that the `ipe` entry is currently a placeholder and cannot be changed.

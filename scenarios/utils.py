@@ -21,10 +21,9 @@ from impactutils.vectorutils.ecef import ecef2latlon
 from impactutils.vectorutils.vector import Vector
 from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
-from shakelib.grind.origin import read_event_file
-#from shakelib.utils.timeutils import ShakeDateTime
-from shakelib.grind.rupture import EdgeRupture
-from shakelib.grind.rupture import QuadRupture
+from shakelib.grind.rupture.origin import read_event_file
+from shakelib.grind.rupture.edge_rupture import EdgeRupture
+from shakelib.grind.rupture.quad_rupture import QuadRupture
 
 
 def set_shakehome(path):
