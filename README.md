@@ -23,7 +23,6 @@ Running a scenario is very different than running real events for a few reasons:
 * There isn't any data to be concerned about
 * The date/time doesn't really matter unless required for a specific
   exercise
-* Transferring to COMCAT requires a different set
 * Scenarios are organized in COMCAT by scenario catalogs, and each catalog
   needs to have an associated "catalog page" on the earthquake website that
   describes how the scenarios are created
@@ -34,13 +33,13 @@ current version of ShakeMap, such as the use of multiple GMPEs, and the
 inclusion of new GMPEs that are not available in ShakeMap 3.5. However, the code
 in this repository only handles the generation of the ground motion grids. The
 generation of products (e.g., maps, shapefiles, etc.) and transferring of the
-products to COMCAT is still handled with ShakeMap 3.5.
+products to COMCAT is still handled with ShakeMap 3.5, but there are some helper
+functions in here to facilitate the interaction of the different codes.
 
 Dependencies
 ------------
 * ShakeMap 3.5: http://usgs.github.io/shakemap/manual_index.html
-* The python dependencies are the same as shakelib, so use the setup_env.sh
-  script from here: https://github.com/usgs/shakelib
+* The python dependencies are the same as shakelib. See the setup_env.sh script.
 
 Workflow
 --------
