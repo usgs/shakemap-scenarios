@@ -45,7 +45,7 @@ def main(args):
     id_str = args.event
 
     spec_file = pkg_resources.resource_filename(
-        'scenarios', os.path.join('..', 'data', 'configspec.conf'))
+        'scenarios', os.path.join('data', 'configspec.conf'))
     validator = get_custom_validator()
     config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'),
                        configspec=spec_file)
