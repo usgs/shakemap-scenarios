@@ -250,8 +250,6 @@ def parse_json_nshmp(rupts, args):
     rlist = []
     nrup = len(rupts['events'])
 
-    print('args.index:')
-    print(args.index)
     if args.index is not None:
         iter = args.index
         iter = map(int, iter)
