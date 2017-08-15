@@ -121,7 +121,7 @@ def parse_bssc2014_ucerf(rupts, args):
     rlist = []
     nrup = len(rupts['events'])
 
-    if args.index:
+    if args.index is not None:
         iter = args.index
         iter = map(int, iter)
     else:
@@ -250,7 +250,9 @@ def parse_json_nshmp(rupts, args):
     rlist = []
     nrup = len(rupts['events'])
 
-    if args.index:
+    print('args.index:')
+    print(args.index)
+    if args.index is not None:
         iter = args.index
         iter = map(int, iter)
     else:
@@ -265,7 +267,7 @@ def parse_json_nshmp(rupts, args):
         if 'rake' in rupts['events'][i].keys():
             rake = rupts['events'][i]['rake']
         else:
-            rake = None
+            rake = np.nan
 
         # Does the file include a rupture model?
         if len(rupts['events'][i]['lats']) > 1:
@@ -359,7 +361,7 @@ def parse_json_nshmp_sub(rupts, args):
     rlist = []
     nrup = len(rupts['events'])
 
-    if args.index:
+    if args.index is not None:
         iter = args.index
         iter = map(int, iter)
     else:
@@ -462,7 +464,7 @@ def parse_json_shakemap(rupts, args):
     rlist = []
     nrup = len(rupts['events'])
 
-    if args.index:
+    if args.index is not None:
         iter = args.index
         iter = map(int, iter)
     else:
