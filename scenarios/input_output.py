@@ -6,10 +6,10 @@ from lxml import etree
 
 import openquake.hazardlib.geo as geo
 
-from shakelib.grind.rupture.factory import json_to_rupture
-from shakelib.grind.rupture.quad_rupture import QuadRupture
-from shakelib.grind.rupture.edge_rupture import EdgeRupture
-from shakelib.grind.rupture.origin import Origin
+from shakelib.rupture.factory import json_to_rupture
+from shakelib.rupture.quad_rupture import QuadRupture
+from shakelib.rupture.edge_rupture import EdgeRupture
+from shakelib.rupture.origin import Origin
 #from shakelib.utils.timeutils import ShakeDateTime
 from impactutils.time.ancient_time import HistoricTime as ShakeDateTime
 
