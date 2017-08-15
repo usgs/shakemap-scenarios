@@ -15,7 +15,7 @@ from configobj import ConfigObj
 from shakemap.utils.config import get_custom_validator
 from shakemap.utils.config import config_error
 
-from shakelib.grind.multigmpe import MultiGMPE
+from shakelib.multigmpe import MultiGMPE
 
 from scenarios.utils import set_gmpe
 

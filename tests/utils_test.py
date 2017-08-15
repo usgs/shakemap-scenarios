@@ -5,7 +5,7 @@ import json
 
 import numpy as np
 
-from shakelib.grind.rupture.origin import Origin
+from shakelib.rupture.origin import Origin
 
 from scenarios.utils import find_rupture
 from scenarios.utils import get_extent
