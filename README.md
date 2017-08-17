@@ -187,7 +187,7 @@ import os
 from configobj import ConfigObj
 from scenarios.utils import run_one_old_shakemap
 config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
-datadir = os.path.join(config['paths']['shakehome'], 'data')
+datadir = os.path.join(config['system']['shakehome'], 'data')
 id_str = next(os.walk(datadir))[1]
 n = len(id_str)
 logs = [None]*n
@@ -229,7 +229,7 @@ from scenarios.utils import send_origin
 from configobj import ConfigObj
 from impactutils.io.cmd import get_command_output
 config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
-datadir = os.path.join(config['paths']['shakehome'], 'data')
+datadir = os.path.join(config['system']['shakehome'], 'data')
 id_str = next(os.walk(datadir))[1]
 n = len(id_str)
 logs = [None]*n
@@ -245,8 +245,8 @@ import os
 from configobj import ConfigObj
 from impactutils.io.cmd import get_command_output
 config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
-datadir = os.path.join(config['paths']['shakehome'], 'data')
-shakebin = os.path.join(config['paths']['shakehome'], 'bin')
+datadir = os.path.join(config['system']['shakehome'], 'data')
+shakebin = os.path.join(config['system']['shakehome'], 'bin')
 id_str = next(os.walk(datadir))[1]
 n = len(id_str)
 logs = [None]*n
