@@ -11,17 +11,18 @@ from impactutils.io.cmd import get_command_output
 def run_one(event, args):
     print('> %s' % event)
     cmd = 'mkscenariogrids -e ' + event + \
-          ' -g ' + args.gmpe + \
           ' -m ' + str(args.max) + \
-          ' -r ' + str(args.res)
+          ' -r ' + str(args.res) + \
+          ' --mesh_dx ' + str(args.mesh_dx)
     rc, so, se = get_command_output(cmd)
+    print(cmd)
     if rc is False:
         raise Exception(se)
 
 
 def main(args):
     config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
-    shakehome = config['paths']['shakehome']
+    shakehome = config['system']['shakehome']
 
     #----------------------------------------------------
     # Get list of existing events
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     '''
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument(
-        '-n', '--nproc', help='Number of processors.', type=int)
+        '-n', '--nproc', help='Number of processors.', type=int, default=1)
     parser.add_argument('-r', '--res', default=30 / 60 / 60, type=float,
                         help='The resolution in decimal degrees; '
                              'default is 30/60/60.')
@@ -68,5 +69,10 @@ if __name__ == '__main__':
                         help='Maximum number of cells allowed; resolution '
                              'is adjusted to ensure this number is no '
                              'exceeded; default is 500,000.')
+    parser.add_argument(
+        '--mesh_dx', default=0.5, type=float,
+        help='The resolution for rupture mesh in km; only used for EdgeRuptures; '
+             'default is 0.5.')
+
     args = parser.parse_args()
     main(args)

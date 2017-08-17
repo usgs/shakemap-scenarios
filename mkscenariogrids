@@ -50,7 +50,7 @@ def main(args):
     config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'),
                        configspec=spec_file)
 
-    shakehome = config['paths']['shakehome']
+    shakehome = config['system']['shakehome']
 
     datdir = os.path.join(shakehome, 'data')
     evt_dir = os.path.join(datdir, id_str)
@@ -162,7 +162,7 @@ def main(args):
     #---------------------------------------------------------------------------
     # Vs30 stuff
     #---------------------------------------------------------------------------
-    vs30filename = config['paths']['vs30file']
+    vs30filename = config['data']['vs30file']
     vs30grid = GMTGrid.load(vs30filename, smdict, resample=True)
 
     # Sites object

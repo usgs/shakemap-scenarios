@@ -49,35 +49,45 @@ You need to configure some paths in a conf file. Create a file in the user home
 directory named `scenarios.conf` with the following contents:
 ```ini
 
-[paths]
+[system]
     # Base directory of shakemap 3.5 installation
     shakehome = /home/user/shake
-
-    # Path to Vs30 grid
-    vs30file = /home/user/data/Global_30_sec/global_vs30_ca_waor_ut_jp.grd
 
     # PDL paths
     pdlbin = /home/user/ProductClient/ProductClient.jar
     key = /home/user/ProductClient/key
     pdlconf = /home/user/ProductClient/scenarioconfig.ini
 
-[grind]
     # Catalog name, i.e., "eventsource"
     catalog = test
 
+[data]
+    # Path to Vs30 grid
+    vs30file = /home/user/data/Global_30_sec/global_vs30_ca_waor_ut_jp.grd
+
+
+[modeling]
     # GMPE; found in openquake.hazardlib.gsim or specified in gmpe_sets.conf
     gmpe=active_crustal_nshmp2014
 
     # IPE; either VirtualIPE or found in shakelib.grind.ipe (does not yet exist)
-    ipe=VirtualIPE
+    ipe=VirtualIPE  # unused
 
     # GMICE; found in shakelib.grind.gmice
-    gmice = WGRW12
+    gmice = WGRW12  # unused
+
+    # Cross correlation function
+    ccf = LB13    # unused
+
+[interp]
+    # IMT list
+    imt_list = PGA    # unused
 
     # Intensity measure component (IMC); currently either "Larger" or "RotD50"
     component = Larger
 ```
-Note that the `ipe` entry is currently a placeholder and cannot be changed.
+Note that the `ipe` and some other entries is currently a placeholder and
+cannot be changed.
 
 ### Rupture Set
 
@@ -111,7 +121,7 @@ If you create a rupture set for scenarios, I would like to archive them in this
 repository. So please send it in as a pull request or email the file to me.
 For more complex ruptures (e.g., multiple disconnected traces) or if you simply
 prefer to specify the lat/lon/depth of each quadrilateral corner, there is an
-example of how to to this in `rupture_sets/example.json`. 
+example of how to to this in `rupture_sets/example.json`.
 
 ### Input Directories
 
@@ -166,7 +176,7 @@ do the full set all at once. Some key things to note:
 The input directories now have all the required files, as well as the
 *estimates.grd and *sd.grd files. So ShakeMap 3.5 is run to generate the various
 products that are transferred to COMCAT. This runs ShakeMap 3.5 up through
-`genex` but does not run `transfer`. 
+`genex` but does not run `transfer`.
 
 Note that I have not written a command line argument for doing this, but there
 is a helper method `run_one_old_shakemap` in this repository. Here is a python
