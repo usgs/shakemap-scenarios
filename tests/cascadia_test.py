@@ -60,6 +60,10 @@ def test_cascadia(tmpdir):
     datadir = os.path.join(p, 'data')
     cmd = 'mkscenariogrids -v -e cascadia_sub0_m9p34_se -r 0.3 --mesh_dx 2.0'
     rc, so, se = get_command_output(cmd)
+    print('rc: %s' %str(rc))
+    print(so.decode())
+    print(se.decode())
+    assert rc == True
 
     # Check output files
     target = os.path.join(targetinput, 'mi_estimates.grd')
