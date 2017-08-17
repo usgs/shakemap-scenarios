@@ -77,7 +77,7 @@ directory named `scenarios.conf` with the following contents:
     gmice = WGRW12  # unused
 
     # Cross correlation function
-    ccf = LB10    # unused
+    ccf = LB13    # unused
 
 [interp]
     # IMT list
