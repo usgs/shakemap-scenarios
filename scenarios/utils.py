@@ -558,7 +558,7 @@ def run_one_old_shakemap(eventid, genex=True):
 
     """
     config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
-    shakehome = config['paths']['shakehome']
+    shakehome = config['system']['shakehome']
     log = {}
     shakebin = os.path.join(shakehome, 'bin')
     datadir = os.path.join(shakehome, 'data')
@@ -669,11 +669,11 @@ def send_origin(eventid):
 
     """
     config = ConfigObj(os.path.join(os.path.expanduser('~'), 'scenarios.conf'))
-    shakehome = config['paths']['shakehome']
-    pdlbin = config['paths']['pdlbin']
-    key = config['paths']['key']
-    pdlconf = config['paths']['pdlconf']
-    catalog = config['grind']['catalog']
+    shakehome = config['system']['shakehome']
+    pdlbin = config['system']['pdlbin']
+    key = config['system']['key']
+    pdlconf = config['system']['pdlconf']
+    catalog = config['system']['catalog']
 
     datadir = os.path.join(shakehome, 'data')
     xmlfile = os.path.join(datadir, eventid, 'input', 'event.xml')
