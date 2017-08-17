@@ -36,7 +36,7 @@ before_script:
     - cp data/scenarios.conf ~/.
 script:
     - export PYTHONPATH="."
-    - py.test --cov=scenarios
+    - py.test --cov=.
 after_success:
     - pip install codecov codacy-coverage
     - codecov

@@ -39,8 +39,8 @@ def set_shakehome(path):
     """
     conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
     config = ConfigObj(conf_file)
-    old_shakehome = config['paths']['shakehome']
-    config['paths']['shakehome'] = path
+    old_shakehome = config['system']['shakehome']
+    config['system']['shakehome'] = path
     config.write()
     return old_shakehome
 
@@ -58,8 +58,8 @@ def set_vs30file(path):
     """
     conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
     config = ConfigObj(conf_file)
-    old_vs30file = config['paths']['vs30file']
-    config['paths']['vs30file'] = path
+    old_vs30file = config['data']['vs30file']
+    config['data']['vs30file'] = path
     config.write()
     return old_vs30file
 
@@ -77,8 +77,8 @@ def set_gmpe(gmpe):
     """
     conf_file = os.path.join(os.path.expanduser('~'), 'scenarios.conf')
     config = ConfigObj(conf_file)
-    old_gmpe = config['grind']['gmpe']
-    config['grind']['gmpe'] = gmpe
+    old_gmpe = config['modeling']['gmpe']
+    config['modeling']['gmpe'] = gmpe
     config.write()
     return old_gmpe
 

@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='US-ASCII'?>
+<earthquake id="cascadia_sub0_m9p34_se" lat="45.06113" lon="-124.41829" mag="9.34" year="2017" month="08" day="17" hour="14" minute="44" second="16" timezone="UTC" depth="21.353" locstring="Cascadia Megathrust - whole CSZ Characteristic largest M branch" description="Median ground motions" created="" otime="" network="" reference="" rake="90" type="RS" directivity="False" eventsourcecode="cascadia_sub0_m9p34_se"/>
