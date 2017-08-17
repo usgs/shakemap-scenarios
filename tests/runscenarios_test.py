@@ -17,29 +17,29 @@ shakedir = os.path.abspath(os.path.join(homedir, '..'))
 sys.path.insert(0, shakedir)
 
 
-def test_cascadia(tmpdir):
+def test_runscenarios(tmpdir):
     # make a temporary directory; read in rupture file
     p = os.path.join(str(tmpdir), "sub")
     if not os.path.exists(p):
         os.makedirs(p)
     old_shakedir = set_shakehome(p)
-    v = os.path.join(shakedir, 'tests/data/cascadiaVs30.grd')
+    v = os.path.join(shakedir, 'tests/data/elsinoreVs30.grd')
     old_vs30file = set_vs30file(v)
-    old_gmpe = set_gmpe('subduction_interface_nshmp2014')
+    old_gmpe = set_gmpe('active_crustal_nshmp2014')
     jsonfile = os.path.join(
-        shakedir, 'rupture_sets/BSSC2014/bssc2014_sub.json')
+        shakedir, 'rupture_sets/BSSC2014/UCERF3_EventSet_All.json')
 
     # directory holding test and target data for this event
-    testinput = os.path.join(p, 'data/cascadia_sub0_m9p34_se/input')
+    testinput = os.path.join(p, 'data/elsinoretsellbgeol_m7p02_se~dir0/input')
     targetinput = os.path.join(
-        shakedir, 'tests/output/cascadia/input')
+        shakedir, 'tests/output/elsinore/input')
 
     #---------------------------------------------------------------------------
     # First test mkinputdir
     #---------------------------------------------------------------------------
 
     # Run mkinputdir
-    cmd = 'mkinputdir -f %s -i 0 ' % jsonfile
+    cmd = 'mkinputdir -f %s -i 269 -d 0' % jsonfile
     rc, so, se = get_command_output(cmd)
     if se != b'':
         print(so.decode())
@@ -50,15 +50,15 @@ def test_cascadia(tmpdir):
     # Note: Not checking event.xml because the timestamp breaks cmp comparison.
     #       Would need to parse and to tag comaprisons. Not worth it.
 
-    target = os.path.join(targetinput, 'cascadia_sub0_m9p34_se_for-map_fault.txt')
-    test = os.path.join(testinput, 'cascadia_sub0_m9p34_se_for-map_fault.txt')
+    target = os.path.join(targetinput, 'elsinoretsellbgeol_m7p02_se~dir0_for-map_fault.txt')
+    test = os.path.join(testinput, 'elsinoretsellbgeol_m7p02_se~dir0_for-map_fault.txt')
     assert filecmp.cmp(test, target) is True
 
     #---------------------------------------------------------------------------
     # Test mkscenariogrids
     #---------------------------------------------------------------------------
     datadir = os.path.join(p, 'data')
-    cmd = 'mkscenariogrids -v -e cascadia_sub0_m9p34_se -r 0.3 --mesh_dx 2.0'
+    cmd = 'runscenarios -m 500 --mesh_dx 3.0'
     rc, so, se = get_command_output(cmd)
 
     # Check output files
@@ -119,4 +119,4 @@ def test_cascadia(tmpdir):
 
 if __name__ == "__main__":
     td1 = tempfile.TemporaryDirectory()
-    test_cascadia(td1.name)
+    test_runscenarios(td1.name)
