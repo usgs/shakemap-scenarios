@@ -541,7 +541,7 @@ def get_rupture_edges(q, rev=None):
     return edges
 
 
-def run_one_old_shakemap(eventid, genex=True):
+def run_one_old_shakemap(eventid, topo=True, genex=True):
     """
     Convenience method for running old (v 3.5) shakemap with new estimates. This
     allows for us to generate all the products with the old code since the new
@@ -550,6 +550,7 @@ def run_one_old_shakemap(eventid, genex=True):
 
     Args:
         eventid (srt): Specifies the id of the event to process.
+        topo (bool): Include topography shading?
         genex (bool): Should genex be run?
 
     Returns:
@@ -644,8 +645,12 @@ def run_one_old_shakemap(eventid, genex=True):
     cmd = shutil.copy(rg_scr, rg_dst)
 
     # Mapping
+    if topo is True:
+        topostr = '-itopo'
+    else:
+        topostr = ''
     callmapping = os.path.join(shakebin, 'mapping') + ' -event ' + \
-        eventid + ' -timestamp -nohinges '
+        eventid + ' -timestamp -nohinges ' + topostr
     rc, so, se = get_command_output(callmapping)
     log['mapping'] = {'rc': rc, 'so': so, 'se': se}
 
