@@ -25,10 +25,13 @@ generation of products (e.g., maps, shapefiles, etc.) and transferring of the
 products to COMCAT is still handled with ShakeMap 3.5, but there are some helper
 functions in here to facilitate the interaction of the different codes.
 
-Dependencies
-------------
+Installation and Dependencies
+-----------------------------
 * ShakeMap 3.5: http://usgs.github.io/shakemap/manual_index.html
 * The python dependencies are the same as shakelib. See the setup_env.sh script.
+* The `install.sh` script installs this package and all dependencies. It is
+  regularly tested on OSX and Ubuntu.
+
 
 Workflow
 --------
