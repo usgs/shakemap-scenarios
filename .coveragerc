@@ -1,4 +1,4 @@
 [run]
 omit = tests/*,*/_version.py,*/__init__.py,*/extern/*,versioneer.py,setup.py
-include = mkinputdir,mkscenariogrids,runscenarios
+include = scenarios/*,mkinputdir,mkscenariogrids,runscenarios
 

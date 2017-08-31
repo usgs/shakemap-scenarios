@@ -44,7 +44,7 @@ while getopts t FLAG; do
   esac
 done
 if [ $travis == 0 ] ; then
-    DEPARRAY+=(ipython=6.1.0 spyder=3.2.1-py35_0 jupyter=1.0.0 seaborn=0.8.0 \
+    DEPARRAY+=(ipython=6.1.0 spyder=3.2.1 jupyter=1.0.0 seaborn=0.8.0 \
         sphinx=1.6.3)
 fi
 
@@ -71,7 +71,7 @@ source activate $VENV
 echo "Downloading OpenQuake v2.5.0..."
 curl --max-time 60 --retry 3 -L \
     https://github.com/gem/oq-engine/archive/v2.5.0.zip -o openquake.zip
-pip -v install --no-deps openquake.zip
+pip -q install --no-deps openquake.zip
 rm openquake.zip
 
 # MapIO and impact-utils
@@ -88,6 +88,10 @@ pip -q install https://github.com/usgs/shakelib/archive/master.zip
 # Shakemap
 echo "Installing shakemap..."
 pip -q install https://github.com/usgs/shakemap/archive/master.zip
+
+# Install shakemap-scearios
+echo "Installing shakemap..."
+pip install -e .
 
 # tell the user they have to activate this environment
 echo "Type 'source activate scenarios' to use this new virtual environment."
