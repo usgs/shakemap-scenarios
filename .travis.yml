@@ -4,11 +4,10 @@ python:
     - "3.5"
 
 install:
-    # Base requirements
-    - bash install-dependencies.sh -t
+    # Install shakemap-scenarios and requirements
+    - bash install.sh -t
+    - export PATH="$HOME/miniconda/bin:$PATH"
     - source activate scenarios
-    # Install shakemap-scenarios
-    - python setup.py install
 before_script:
     # This is to take care of Invalid DISPLAY variable
     - "export DISPLAY=:99.0"
